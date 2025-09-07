@@ -1,0 +1,25 @@
+
+
+Desired features:
+Home Screen
+    (1)Start button
+        (1)Map showing current location and checkpoints
+            (1)Different colored flags depending on which checkpoint is next
+                (3)Table showing checkpoints, current time, and average time
+Analytics Screen
+                    (4)Calendar with previous times (a la Huckleberry)
+                    (3)Averages by day, week, year/all time
+Routes
+            (2)Add checkpoints to list
+            (2)Remove checkpoints
+    (5)Add routes - each route has specified checkpoints
+        (5)Show cards for each route, add button for adding routes
+        (5)Each card shows Title, typical time, last used, add/delete button, checkpoints
+
+
+Priorities
+1) Basic funcitonality with hardcoded checkpoints
+2) Core data to save checkpoints
+3) Add/Remove checkpoints from map
+4) 
+
