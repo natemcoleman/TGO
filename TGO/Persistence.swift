@@ -18,6 +18,10 @@ struct PersistenceController {
             let newItem = Item(context: viewContext)
             newItem.timestamp = Date()
         }
+        for _ in 0..<10 {
+            let newPin = Pin(context: viewContext)
+            newPin.id = UUID()
+        }
         do {
             try viewContext.save()
         } catch {
