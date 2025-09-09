@@ -21,5 +21,17 @@ Priorities
 1) Basic funcitonality with hardcoded checkpoints
 2) Core data to save checkpoints
 3) Add/Remove checkpoints from map
-4) 
+4)
 
+Data structures:
+Routes
+    Checkpoints
+    Typical time
+Checkpoints
+    Name
+    Lat/Long
+    id
+Previous runs
+    Date
+    Route
+    Times between checkpoints
