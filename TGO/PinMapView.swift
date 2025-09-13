@@ -126,13 +126,13 @@ struct PinMapView: View {
             .navigationTitle("Map Pins")
             .navigationBarTitleDisplayMode(.inline)
             // 2. ADD A TOOLBAR WITH A NAVIGATION LINK
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    NavigationLink(destination: PinListView()) {
-                        Image(systemName: "list.bullet")
-                    }
-                }
-            }
+//            .toolbar {
+//                ToolbarItem(placement: .navigationBarTrailing) {
+//                    NavigationLink(destination: PinListView()) {
+//                        Image(systemName: "list.bullet")
+//                    }
+//                }
+//            }
         }
     }
 

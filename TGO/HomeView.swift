@@ -34,6 +34,11 @@ struct HomeView:View {
     // This was moved from the body to prevent re-initialization
     @StateObject var locationManager = LocationManager()
     
+//     NEW: A computed property that extracts the coordinates from the fetched pins.
+        private var pinCoordinates: [CLLocationCoordinate2D] {
+            allPins.map { $0.coordinate }
+        }
+    
     // NEW: A computed property to determine which pins to show.
     // If a route is selected, it shows that route's pins, sorted correctly.
     // If no route is selected, it shows all pins.
@@ -55,6 +60,8 @@ struct HomeView:View {
             
             // The Map now loops over the 'pinsToShow' computed property.
             Map(position: $position) {
+                MapPolyline(coordinates: pinCoordinates)
+                                            .stroke(.blue, lineWidth: 5)
                 ForEach(pinsToShow) { pin in
                     Annotation(pin.name ?? "Pin", coordinate: pin.coordinate) {
                         Image(systemName: "flag.circle.fill")
@@ -68,6 +75,8 @@ struct HomeView:View {
             .frame(width: 300, height: 300)
             .cornerRadius(50)
             .shadow(radius: 10)
+            
+            Spacer()
 
             // NEW: The route selector Picker.
             Picker("Select a Route", selection: $selectedRoute) {
@@ -84,6 +93,8 @@ struct HomeView:View {
             .background(Color(.systemGray6))
             .cornerRadius(12)
             .shadow(radius: 2)
+            
+            Spacer()
 
             // The list of pins also loops over 'pinsToShow' to stay in sync.
             VStack(alignment: .leading) {

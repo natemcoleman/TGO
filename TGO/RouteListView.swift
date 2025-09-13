@@ -10,6 +10,7 @@ struct RouteListView: View {
     private var routes: FetchedResults<Route>
 
     @State private var isShowingAddSheet = false
+    @State private var isShowingAddPins = false
 
     var body: some View {
         NavigationView {
@@ -31,10 +32,20 @@ struct RouteListView: View {
                             .font(.title2)
                     }
                 }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: { isShowingAddPins = true }) {
+                        Image(systemName: "mappin.and.ellipse.circle.fill")
+                            .font(.title2)
+                    }
+                }
             }
             .sheet(isPresented: $isShowingAddSheet) {
                 // Present the sheet for adding a NEW route (routeToEdit is nil)
                 AddEditRouteView(routeToEdit: nil)
+            }
+            .sheet(isPresented: $isShowingAddPins) {
+                // Present the sheet for adding a NEW route (routeToEdit is nil)
+                PinMapView()
             }
         }
     }

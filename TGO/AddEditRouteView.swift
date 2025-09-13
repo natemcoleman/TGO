@@ -136,9 +136,9 @@ struct AddEditRouteView: View {
     }
 }
 
-#Preview {
-    RouteListView().environment(
-        \.managedObjectContext,
-        PersistenceController.preview.container.viewContext
-    )
-}
+//#Preview {
+//    AddEditRouteView(routeToEdit: nil).environment(
+//        \.managedObjectContext,
+//        PersistenceController.preview.container.viewContext
+//    )
+//}
