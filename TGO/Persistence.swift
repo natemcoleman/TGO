@@ -14,14 +14,51 @@ struct PersistenceController {
     static let preview: PersistenceController = {
         let result = PersistenceController(inMemory: true)
         let viewContext = result.container.viewContext
-        for _ in 0..<10 {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
-        }
-        for _ in 0..<10 {
-            let newPin = Pin(context: viewContext)
-            newPin.id = UUID()
-        }
+//        for _ in 0..<10 {
+//            let newItem = Item(context: viewContext)
+//            newItem.timestamp = Date()
+//        }
+//        for _ in 0..<10 {
+//            let newPin = Pin(context: viewContext)
+//            newPin.id = UUID()
+//        }
+//        let pin1 = Pin(context: viewContext)
+//        pin1.id = UUID()
+//        pin1.name = "Home"
+//        pin1.latitude = 39.22958751944363
+//        pin1.longitude = -76.8485354177105
+//        pin1.order = 0
+//        
+//        let pin2 = Pin(context: viewContext)
+//        pin2.id = UUID()
+//        pin2.name = "Patuxent Light"
+//        pin2.latitude = 39.22589744964121
+//        pin2.longitude = -76.85535359298007
+//        pin2.order = 1
+//        
+//        let pin3 = Pin(context: viewContext)
+//        pin3.id = UUID()
+//        pin3.name = "29 Light"
+//        pin3.latitude = 39.17386677510497
+//        pin3.longitude = -76.88125300327637
+//        pin3.order = 2
+//        
+//        let pin4 = Pin(context: viewContext)
+//        pin4.id = UUID()
+//        pin4.name = "Hopkins Road Light"
+//        pin4.latitude = 39.15944302100448
+//        pin4.longitude = -76.89335513031924
+//        pin4.order = 3
+//        
+//        let pin5 = Pin(context: viewContext)
+//        pin5.id = UUID()
+//        pin5.name = "APL"
+//        pin5.latitude = 39.16167249112726
+//        pin5.longitude = -76.89963149940631
+//        pin5.order = 4
+        
+        
+        
         do {
             try viewContext.save()
         } catch {
@@ -55,7 +92,67 @@ struct PersistenceController {
                  */
                 fatalError("Unresolved error \(error), \(error.userInfo)")
             }
+            
         })
+        self.seedInitialData()
         container.viewContext.automaticallyMergesChangesFromParent = true
     }
+    private func seedInitialData() {
+        let viewContext = container.viewContext
+        
+        // Perform a fetch request to see if any pins already exist.
+        let fetchRequest: NSFetchRequest<Pin> = Pin.fetchRequest()
+        
+        do {
+            let existingPins = try viewContext.fetch(fetchRequest)
+            
+            // If the database is empty, add your initial pins.
+            if existingPins.isEmpty {
+                print("Core Data is empty. Seeding initial pins...")
+                
+                let pin1 = Pin(context: viewContext)
+                pin1.id = UUID()
+                pin1.name = "Home"
+                pin1.latitude = 39.22958751944363
+                pin1.longitude = -76.8485354177105
+                pin1.order = 0
+                
+                let pin2 = Pin(context: viewContext)
+                pin2.id = UUID()
+                pin2.name = "Patuxent Light"
+                pin2.latitude = 39.22589744964121
+                pin2.longitude = -76.85535359298007
+                pin2.order = 1
+                
+                let pin3 = Pin(context: viewContext)
+                pin3.id = UUID()
+                pin3.name = "29 Light"
+                pin3.latitude = 39.17386677510497
+                pin3.longitude = -76.88125300327637
+                pin3.order = 2
+                
+                let pin4 = Pin(context: viewContext)
+                pin4.id = UUID()
+                pin4.name = "Hopkins Road Light"
+                pin4.latitude = 39.15944302100448
+                pin4.longitude = -76.89335513031924
+                pin4.order = 3
+                
+                let pin5 = Pin(context: viewContext)
+                pin5.id = UUID()
+                pin5.name = "APL"
+                pin5.latitude = 39.16167249112726
+                pin5.longitude = -76.89963149940631
+                pin5.order = 4
+                
+                // Save the new pins to the database
+                try viewContext.save()
+            } else {
+                print("Core Data already contains pins. No seeding needed.")
+            }
+        } catch let error as NSError {
+            print("Could not fetch or save from Core Data. \(error), \(error.userInfo)")
+        }
+    }
 }
+

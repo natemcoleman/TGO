@@ -20,12 +20,17 @@ struct ContentView: View {
 //                Image(systemName: "chart.bar.xaxis")
 //            }.tag(2)
 //                .ignoresSafeArea()
-            RouteView2().tabItem {
-                Image(systemName: "point.bottomleft.forward.to.point.topright.filled.scurvepath")
+            PinMapView().tabItem {
+                Image(systemName: "mappin.and.ellipse.circle")
             }.tag(2)
+//                .ignoresSafeArea()
+            PinMapView().tabItem {
+                Image(systemName: "point.bottomleft.forward.to.point.topright.filled.scurvepath")
+            }.tag(3)
 //                .ignoresSafeArea()
         }
         .ignoresSafeArea()
+        .padding(.top)
     }
 }
 
