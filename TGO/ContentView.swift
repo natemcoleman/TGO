@@ -24,7 +24,7 @@ struct ContentView: View {
                 Image(systemName: "mappin.and.ellipse.circle")
             }.tag(2)
 //                .ignoresSafeArea()
-            PinMapView().tabItem {
+            RouteListView().tabItem {
                 Image(systemName: "point.bottomleft.forward.to.point.topright.filled.scurvepath")
             }.tag(3)
 //                .ignoresSafeArea()
