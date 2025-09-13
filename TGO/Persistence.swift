@@ -103,7 +103,7 @@ struct PersistenceController {
 
         // Perform a fetch request to see if any pins already exist.
         let fetchRequest: NSFetchRequest<Pin> = Pin.fetchRequest()
-        let fetchRequestRoute: NSFetchRequest<Route> = Route.fetchRequest()
+
         do {
             let existingPins = try viewContext.fetch(fetchRequest)
 
