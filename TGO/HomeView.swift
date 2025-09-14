@@ -52,16 +52,22 @@ struct HomeView: View {
                     }
                 }
             }
-            .frame(height: 300)
             .cornerRadius(50)
+            .frame(width: 400, height: 300)
+            .shadow(radius: 10)
 
+            Spacer()
+            
             Picker("Select a Route", selection: $selectedRoute) {
-                Text("Select a Route...").tag(nil as Route?)
+                Text("Select a Route").tag(nil as Route?)
                 ForEach(routes) { route in
                     Text(route.name ?? "Unnamed Route").tag(route as Route?)
                 }
             }
             .padding()
+//            .frame(width: 400)
+            .background(Color(UIColor.systemGray6))
+            .cornerRadius(12)
 
             if let route = selectedRoute {
                 let routePins = route.routePins as? Set<RoutePin> ?? []
@@ -80,7 +86,9 @@ struct HomeView: View {
                 }
             }) {
                 Image(systemName: "arrowtriangle.right.circle.fill")
-                    .resizable().scaledToFit().frame(width: 100, height: 100)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 100, height: 100)
             }
             .foregroundColor(.green)
             .disabled(selectedRoute == nil)
@@ -123,13 +131,27 @@ struct HomeView: View {
             Spacer()
             
             HStack(spacing: 20) {
-                Button(action: { runViewModel.finishRun() }) { Text("Stop") }
-                    .buttonStyle(.borderedProminent).tint(.red)
+                Button(action: { runViewModel.finishRun() })
+                {
+                    Image(systemName: "stop.circle")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 100, height: 100)
+                }
+                .buttonStyle(.borderedProminent).tint(.red)
                 
-                Button(action: { runViewModel.splitLap() }) { Text("Split") }
-                    .buttonStyle(.borderedProminent).tint(.blue)
+                Button(action: { runViewModel.splitLap() })
+                {
+                    Image(systemName: "stopwatch")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 100, height: 100)
+                }
+                .buttonStyle(.borderedProminent).tint(.green)
             }
             .padding()
+            
+            Spacer()
         }
     }
     
