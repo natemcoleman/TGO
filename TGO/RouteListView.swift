@@ -40,11 +40,9 @@ struct RouteListView: View {
                 }
             }
             .sheet(isPresented: $isShowingAddSheet) {
-                // Present the sheet for adding a NEW route (routeToEdit is nil)
                 AddEditRouteView(routeToEdit: nil)
             }
             .sheet(isPresented: $isShowingAddPins) {
-                // Present the sheet for adding a NEW route (routeToEdit is nil)
                 PinMapView()
             }
         }

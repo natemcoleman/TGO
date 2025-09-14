@@ -3,12 +3,28 @@
     <entity name="Item" representedClassName="Item" syncable="YES" codeGenerationType="class">
         <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
     </entity>
+    <entity name="Log" representedClassName="Log" syncable="YES" codeGenerationType="class">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="startTime" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="totalTime" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <relationship name="loggedPins" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="LoggedPin" inverseName="log" inverseEntity="LoggedPin"/>
+        <relationship name="route" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Route" inverseName="logs" inverseEntity="Route"/>
+    </entity>
+    <entity name="LoggedPin" representedClassName="LoggedPin" syncable="YES" codeGenerationType="class">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="order" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="runningTime" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="splitTime" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <relationship name="log" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Log" inverseName="loggedPins" inverseEntity="Log"/>
+        <relationship name="pin" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Pin" inverseName="loggedInstances" inverseEntity="Pin"/>
+    </entity>
     <entity name="Pin" representedClassName=".Pin" syncable="YES" codeGenerationType="class">
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="latitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="longitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="order" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="loggedInstances" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="LoggedPin" inverseName="pin" inverseEntity="LoggedPin"/>
         <relationship name="routePins" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="RoutePin" inverseName="pin" inverseEntity="RoutePin"/>
     </entity>
     <entity name="Route" representedClassName="Route" syncable="YES" codeGenerationType="class">
@@ -16,6 +32,7 @@
         <attribute name="desc" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" optional="YES" attributeType="String"/>
+        <relationship name="logs" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Log" inverseName="route" inverseEntity="Log"/>
         <relationship name="routePins" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="RoutePin" inverseName="route" inverseEntity="RoutePin"/>
     </entity>
     <entity name="RoutePin" representedClassName="RoutePin" syncable="YES" codeGenerationType="class">

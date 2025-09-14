@@ -1,143 +1,155 @@
-//
-//  HomeView.swift
-//  SpeedRacer
-//
-//  Created by Brooklyn Daines on 9/5/25.
-//
-
-
 import SwiftUI
 import MapKit
 import CoreData
 import CoreLocation
 
-struct HomeView:View {
-    // MARK: - State and Fetch Requests
-    @State private var routeIsActive = false
-    @State private var position: MapCameraPosition = .automatic
+struct HomeView: View {
+    @Environment(\.managedObjectContext) private var viewContext
     
-    // NEW: State to hold the currently selected route. It's optional.
+    @StateObject private var runViewModel: LiveTrackingViewModel
+
+    @State private var position: MapCameraPosition = .automatic
     @State private var selectedRoute: Route?
-
-    // This fetch request gets all pins (used as a fallback).
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Pin.order, ascending: true)],
-        animation: .default)
-    private var allPins: FetchedResults<Pin>
-
-    // NEW: Fetch all of your Route entities.
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Route.createdAt, ascending: true)],
-        animation: .default)
+    
+    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Route.createdAt, ascending: true)])
     private var routes: FetchedResults<Route>
     
-    // This was moved from the body to prevent re-initialization
-    @StateObject var locationManager = LocationManager()
-    
-//     NEW: A computed property that extracts the coordinates from the fetched pins.
-        private var pinCoordinates: [CLLocationCoordinate2D] {
-            allPins.map { $0.coordinate }
-        }
-    
-    // NEW: A computed property to determine which pins to show.
-    // If a route is selected, it shows that route's pins, sorted correctly.
-    // If no route is selected, it shows all pins.
-    private var pinsToShow: [Pin] {
-        guard let route = selectedRoute else {
-            return Array(allPins)
-        }
-        
-        let routePins = route.routePins as? Set<RoutePin> ?? []
-        return routePins
-            .sorted { $0.order < $1.order }
-            .compactMap { $0.pin }
+    // --- MODIFICATION #1: Update the initializer ---
+    // This initializer now uses the context from the environment to create its view model.
+    // This ensures the view and its view model are always using the same data store.
+    init() {
+        let context = PersistenceController.shared.container.viewContext
+        _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context))
     }
 
-    // MARK: - Body
+    private init(context: NSManagedObjectContext) {
+        _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context))
+    }
+    // ---------------------------------------------
+    
     var body: some View {
+        if runViewModel.runState == .inactive {
+            setupView
+        } else {
+            liveRunView
+        }
+    }
+
+    private var setupView: some View {
         VStack {
-            Spacer()
-            
-            // The Map now loops over the 'pinsToShow' computed property.
             Map(position: $position) {
-                MapPolyline(coordinates: pinCoordinates)
-                                            .stroke(.blue, lineWidth: 5)
-                ForEach(pinsToShow) { pin in
-                    Annotation(pin.name ?? "Pin", coordinate: pin.coordinate) {
-                        Image(systemName: "flag.circle.fill")
-                            .foregroundColor(.green)
-                            .padding()
-                            .shadow(radius: 2)
+                if let route = selectedRoute {
+                    let routePins = route.routePins as? Set<RoutePin> ?? []
+                    let sortedPins = routePins.sorted { $0.order < $1.order }.compactMap { $0.pin }
+                    
+                    ForEach(sortedPins) { pin in
+                        Annotation(pin.name ?? "Pin", coordinate: pin.coordinate) {
+                            Image(systemName: "flag.circle.fill")
+                                .foregroundColor(.green)
+                                .padding()
+                                .shadow(radius: 2)
+                        }
                     }
                 }
             }
-            .edgesIgnoringSafeArea(.all)
-            .frame(width: 300, height: 300)
+            .frame(height: 300)
             .cornerRadius(50)
-            .shadow(radius: 10)
-            
-            Spacer()
 
-            // NEW: The route selector Picker.
             Picker("Select a Route", selection: $selectedRoute) {
-                // Add a "None" option to allow deselecting a route.
-                Text("Show All Pins").tag(nil as Route?)
-                
-                // Loop through all fetched routes.
+                Text("Select a Route...").tag(nil as Route?)
                 ForEach(routes) { route in
                     Text(route.name ?? "Unnamed Route").tag(route as Route?)
                 }
             }
-            .pickerStyle(.menu) // This makes it a dropdown button.
-            .padding()
-            .background(Color(.systemGray6))
-            .cornerRadius(12)
-            .shadow(radius: 2)
-            
-            Spacer()
-
-            // The list of pins also loops over 'pinsToShow' to stay in sync.
-            VStack(alignment: .leading) {
-                HStack {
-                    Text("Name").bold().frame(width: 120, alignment: .leading)
-                    Text("Order").bold()
-                }
-                ForEach(Array(pinsToShow.enumerated()), id: \.element.id) { index, pin in
-                    HStack {
-                        Text(pin.name ?? "Unnamed")
-                            .frame(width: 120, alignment: .leading)
-                        // Use the index from the sorted array for correct order display.
-                        Text("\(index + 1)")
-                    }
-                }
-            }
             .padding()
 
+            if let route = selectedRoute {
+                let routePins = route.routePins as? Set<RoutePin> ?? []
+                let sortedPins = routePins.sorted { $0.order < $1.order }.compactMap { $0.pin }
+                
+                List(sortedPins) { pin in
+                    Text(pin.name ?? "Unnamed Pin")
+                }
+            }
+            
             Spacer()
             
-            Toggle(isOn: $routeIsActive) {
-                Image(systemName: routeIsActive ? "flag.pattern.checkered.circle" : "arrowtriangle.right.circle.fill")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 100, height: 100)
+            Button(action: {
+                if let route = selectedRoute {
+                    runViewModel.startRun(for: route)
+                }
+            }) {
+                Image(systemName: "arrowtriangle.right.circle.fill")
+                    .resizable().scaledToFit().frame(width: 100, height: 100)
             }
-            .toggleStyle(.button)
-            .labelStyle(.iconOnly)
-            .contentTransition(.symbolEffect)
-            .foregroundColor(routeIsActive ? .black : .green)
+            .foregroundColor(.green)
+            .disabled(selectedRoute == nil)
             
             Spacer()
         }
     }
+    
+    private var liveRunView: some View {
+        VStack {
+            Text(formatTime(runViewModel.elapsedTime))
+                .font(.system(size: 64, weight: .bold, design: .monospaced))
+                .padding()
+
+            List {
+                let sortedLoggedPins: [LoggedPin] = {
+                    guard let log = runViewModel.activeLog else { return [] }
+                    let loggedPinsSet = log.loggedPins as? Set<LoggedPin> ?? []
+                    return loggedPinsSet.sorted { $0.order < $1.order }
+                }()
+                
+                ForEach(sortedLoggedPins) { loggedPin in
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text(loggedPin.pin?.name ?? "Unknown Pin")
+                                .font(.headline)
+                            Text("Split: \(formatTime(loggedPin.splitTime))")
+                                .font(.caption.monospaced())
+                        }
+                        Spacer()
+                        Text(formatTime(loggedPin.runningTime))
+                            .font(.body.monospaced())
+                    }
+                    .listRowBackground(
+                        runViewModel.nextSplitIndex == loggedPin.order ? Color.green.opacity(0.2) : Color.clear
+                    )
+                }
+            }
+            
+            Spacer()
+            
+            HStack(spacing: 20) {
+                Button(action: { runViewModel.finishRun() }) { Text("Stop") }
+                    .buttonStyle(.borderedProminent).tint(.red)
+                
+                Button(action: { runViewModel.splitLap() }) { Text("Split") }
+                    .buttonStyle(.borderedProminent).tint(.blue)
+            }
+            .padding()
+        }
+    }
+    
+    private func formatTime(_ interval: TimeInterval) -> String {
+        let minutes = Int(interval) / 60
+        let seconds = Int(interval) % 60
+        let milliseconds = Int((interval.truncatingRemainder(dividingBy: 1)) * 100)
+        return String(format: "%02d:%02d.%02d", minutes, seconds, milliseconds)
+    }
 }
 
-//// Helper to make Pin conform to CLLocationCoordinate2D
-//extension Pin {
-//    var coordinate: CLLocationCoordinate2D {
-//        .init(latitude: latitude, longitude: longitude)
-//    }
+// --- MODIFICATION #2: Update the Preview ---
+//// This now creates a special version of HomeView for the preview,
+//// ensuring it uses the correct in-memory preview context.
+//#Preview {
+//    let previewContext = PersistenceController.preview.container.viewContext
+//    return HomeView(context: previewContext)
+//        .environment(\.managedObjectContext, previewContext)
 //}
-
+//// ------------------------------------------
 #Preview {
-    HomeView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+    ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }

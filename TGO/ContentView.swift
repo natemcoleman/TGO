@@ -15,19 +15,15 @@ struct ContentView: View {
         TabView {
             HomeView().tabItem { Image(systemName: "house")
             }.tag(1)
-//                .ignoresSafeArea()
 //            AnalyticsView().tabItem {
 //                Image(systemName: "chart.bar.xaxis")
 //            }.tag(2)
-//                .ignoresSafeArea()
-//            PinMapView().tabItem {
-//                Image(systemName: "mappin.and.ellipse.circle")
-//            }.tag(2)
-////                .ignoresSafeArea()
+            LogHistoryView().tabItem {
+                Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+            }.tag(2)
             RouteListView().tabItem {
                 Image(systemName: "point.bottomleft.forward.to.point.topright.filled.scurvepath")
             }.tag(3)
-//                .ignoresSafeArea()
         }
         .ignoresSafeArea()
         .padding(.top)
