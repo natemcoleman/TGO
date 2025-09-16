@@ -7,25 +7,23 @@ struct HomeView: View {
     @Environment(\.managedObjectContext) private var viewContext
     
     @StateObject private var runViewModel: LiveTrackingViewModel
-
-    @State private var position: MapCameraPosition = .automatic
+    
+//    @State private var position: MapCameraPosition = .automatic
+    @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
     @State private var selectedRoute: Route?
+    @State var mapRegion = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 51.507222, longitude: -0.1275), span: MKCoordinateSpan(latitudeDelta: 0.2, longitudeDelta: 0.2))
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Route.createdAt, ascending: true)])
     private var routes: FetchedResults<Route>
     
-    // --- MODIFICATION #1: Update the initializer ---
-    // This initializer now uses the context from the environment to create its view model.
-    // This ensures the view and its view model are always using the same data store.
     init() {
         let context = PersistenceController.shared.container.viewContext
         _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context))
     }
-
+    
     private init(context: NSManagedObjectContext) {
         _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context))
     }
-    // ---------------------------------------------
     
     var body: some View {
         if runViewModel.runState == .inactive {
@@ -34,10 +32,10 @@ struct HomeView: View {
             liveRunView
         }
     }
-
+    
     private var setupView: some View {
         VStack {
-            Map(position: $position) {
+            Map(position: $position) { //, interactionModes: []
                 if let route = selectedRoute {
                     let routePins = route.routePins as? Set<RoutePin> ?? []
                     let sortedPins = routePins.sorted { $0.order < $1.order }.compactMap { $0.pin }
@@ -51,11 +49,13 @@ struct HomeView: View {
                         }
                     }
                 }
+                UserAnnotation()
             }
             .cornerRadius(50)
             .frame(width: 400, height: 300)
             .shadow(radius: 10)
-
+            .mapControls{MapUserLocationButton()}
+            
             Spacer()
             
             Picker("Select a Route", selection: $selectedRoute) {
@@ -65,10 +65,10 @@ struct HomeView: View {
                 }
             }
             .padding()
-//            .frame(width: 400)
+            //            .frame(width: 400)
             .background(Color(UIColor.systemGray6))
             .cornerRadius(12)
-
+            
             if let route = selectedRoute {
                 let routePins = route.routePins as? Set<RoutePin> ?? []
                 let sortedPins = routePins.sorted { $0.order < $1.order }.compactMap { $0.pin }
@@ -102,7 +102,7 @@ struct HomeView: View {
             Text(formatTime(runViewModel.elapsedTime))
                 .font(.system(size: 64, weight: .bold, design: .monospaced))
                 .padding()
-
+            
             List {
                 let sortedLoggedPins: [LoggedPin] = {
                     guard let log = runViewModel.activeLog else { return [] }

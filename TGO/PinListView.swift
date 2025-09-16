@@ -29,16 +29,17 @@ struct PinListView: View {
                 ForEach(pins) { pin in
                     HStack {
                         // Display the pin's order and name
-                        Text("\(pin.order)")
-                            .font(.headline)
-                            .frame(width: 30)
-                            .padding(.trailing, 5)
+//                        Text("\(pin.order)")
+//                            .font(.headline)
+//                            .frame(width: 30)
+//                            .padding(.trailing, 5)
                         Text(pin.name ?? "Unnamed Pin")
                     }
                 }
-                .onMove(perform: movePins) // The modifier that enables reordering
+//                .onMove(perform: movePins) // The modifier that enables reordering
+                .onDelete(perform: removePins) // Optional: Allow deletion of pins
             }
-            .navigationTitle("Reorder Pins")
+            .navigationTitle("Delete Pins")
             .toolbar {
                 // An EditButton toggles the list's edit mode, showing the drag handles
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -52,20 +53,24 @@ struct PinListView: View {
 
     /// This function is called when the user finishes dragging a row in the list.
     private func movePins(from source: IndexSet, to destination: Int) {
-        // 1. Create a mutable copy of the fetched pins array.
         var revisedPins = pins.map { $0 }
-
-        // 2. Perform the move operation on the in-memory array.
         revisedPins.move(fromOffsets: source, toOffset: destination)
 
-        // 3. Iterate through the now-reordered array and update the 'order'
-        //    attribute of each pin based on its new index.
         for (index, pin) in revisedPins.enumerated() {
             pin.order = Int32(index)
         }
-        
-        // 4. Save the managed object context to persist the changes.
         saveContext()
+    }
+    
+    private func removePins(offsets: IndexSet) {
+        withAnimation {
+            offsets.map { pins[$0] }.forEach(viewContext.delete)
+            do {
+                try viewContext.save()
+            } catch {
+                print("Failed to delete pin: \(error.localizedDescription)")
+            }
+        }
     }
     
     private func saveContext() {

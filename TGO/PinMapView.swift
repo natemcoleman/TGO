@@ -44,6 +44,7 @@ struct PinMapView: View {
 
     // MARK: - Body
     var body: some View {
+        
         NavigationView {
             ZStack {
                 // MapReader allows us to get the coordinate of a tap or drag
@@ -67,7 +68,6 @@ struct PinMapView: View {
                                             deletePin(pin)
                                         }
                                         print("Tapping pin")
-
                                     }
                             }
                         }

@@ -43,7 +43,7 @@ struct RouteListView: View {
                 AddEditRouteView(routeToEdit: nil)
             }
             .sheet(isPresented: $isShowingAddPins) {
-                PinMapView()
+                PinView()
             }
         }
     }
@@ -64,15 +64,11 @@ struct RouteCardView: View {
     @ObservedObject var route: Route
 
     var body: some View {
-        // --- MODIFICATION IS HERE ---
-        // Calculate the sorted pins as a local constant inside the view's body.
         let sortedPins = (route.routePins as? Set<RoutePin> ?? [])
             .sorted { $0.order < $1.order }
             .compactMap { $0.pin }
-        // ---------------------------
         
         VStack(alignment: .leading, spacing: 12) {
-            // Header
             HStack {
                 VStack(alignment: .leading) {
                     Text(route.name ?? "Untitled Route")
@@ -85,7 +81,6 @@ struct RouteCardView: View {
                 Spacer()
             }
 
-            // Use the 'sortedPins' constant we just created.
             if !sortedPins.isEmpty {
                 Divider()
                 Text("Checkpoints: \(sortedPins.count)")
