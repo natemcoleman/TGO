@@ -13,8 +13,6 @@ struct PinListView: View {
     // MARK: - Core Data
     @Environment(\.managedObjectContext) private var viewContext
 
-    // Fetch the pins and, crucially, sort them by the 'order' attribute
-    // This ensures they appear in the correct, user-defined sequence.
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Pin.order, ascending: true)],
         animation: .default)
@@ -22,10 +20,8 @@ struct PinListView: View {
 
     // MARK: - Body
     var body: some View {
-        // Use a NavigationView to provide a title and toolbar
         NavigationView {
             List {
-                // ForEach is what allows the list to be dynamic and reorderable
                 ForEach(pins) { pin in
                     HStack {
                         // Display the pin's order and name
@@ -41,7 +37,6 @@ struct PinListView: View {
             }
             .navigationTitle("Delete Pins")
             .toolbar {
-                // An EditButton toggles the list's edit mode, showing the drag handles
                 ToolbarItem(placement: .navigationBarTrailing) {
                     EditButton()
                 }

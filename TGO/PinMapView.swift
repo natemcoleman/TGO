@@ -9,12 +9,11 @@ import CoreData
 import MapKit
 import SwiftUI
 
-// Enum to define the user's current interaction mode
 enum MapMode {
     case none
     case adding
     case deleting
-    case dragging  // New mode for dragging
+    case dragging
 }
 
 struct PinMapView: View {
@@ -47,10 +46,8 @@ struct PinMapView: View {
         
         NavigationView {
             ZStack {
-                // MapReader allows us to get the coordinate of a tap or drag
                 MapReader { proxy in
                     Map(position: $position) {
-                        // Display all saved pins from Core Data
                         ForEach(pins) { pin in
                             Annotation(
                                 pin.name ?? "Unnamed Pin",
@@ -125,7 +122,7 @@ struct PinMapView: View {
             }
             .navigationTitle("Map Pins")
             .navigationBarTitleDisplayMode(.inline)
-            // 2. ADD A TOOLBAR WITH A NAVIGATION LINK
+            // Moved this to tab view
 //            .toolbar {
 //                ToolbarItem(placement: .navigationBarTrailing) {
 //                    NavigationLink(destination: PinListView()) {

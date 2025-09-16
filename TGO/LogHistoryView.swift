@@ -58,7 +58,6 @@ struct LogHistoryView: View {
     }
 }
 
-// LogCardView subview remains the same
 struct LogCardView: View {
     let log: Log
     var body: some View {
@@ -87,9 +86,4 @@ struct LogCardView: View {
         let milliseconds = Int((interval.truncatingRemainder(dividingBy: 1)) * 100)
         return String(format: "%02d:%02d.%02d", minutes, seconds, milliseconds)
     }
-}
-
-#Preview {
-    LogHistoryView()
-        .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }

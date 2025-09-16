@@ -78,10 +78,8 @@ struct EditLogView: View {
     }
     
     private func saveChanges() {
-        // Update the main log's total time
         log.totalTime = Self.parseTime(totalTimeString) // Use Self.parseTime
         
-        // Update each individual LoggedPin
         for editablePin in editablePins {
             if let loggedPin = try? viewContext.existingObject(with: editablePin.id) as? LoggedPin {
                 loggedPin.runningTime = Self.parseTime(editablePin.runningTimeString) // Use Self.parseTime
@@ -97,8 +95,6 @@ struct EditLogView: View {
         }
     }
     
-    // --- MODIFIED: Added the 'static' keyword ---
-    // This makes the function associated with the EditLogView type, not an instance.
     private static func formatTime(_ interval: TimeInterval) -> String {
         let minutes = Int(interval) / 60
         let seconds = Int(interval) % 60
@@ -106,7 +102,6 @@ struct EditLogView: View {
         return String(format: "%02d:%02d.%02d", minutes, seconds, milliseconds)
     }
     
-    // --- MODIFIED: Added the 'static' keyword ---
     private static func parseTime(_ timeString: String) -> TimeInterval {
         let components = timeString.replacingOccurrences(of: ":", with: ".")
             .split(separator: ".").compactMap { Double($0) }

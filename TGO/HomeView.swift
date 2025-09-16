@@ -7,8 +7,6 @@ struct HomeView: View {
     @Environment(\.managedObjectContext) private var viewContext
     
     @StateObject private var runViewModel: LiveTrackingViewModel
-    
-//    @State private var position: MapCameraPosition = .automatic
     @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
     @State private var selectedRoute: Route?
     @State var mapRegion = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 51.507222, longitude: -0.1275), span: MKCoordinateSpan(latitudeDelta: 0.2, longitudeDelta: 0.2))
@@ -163,15 +161,6 @@ struct HomeView: View {
     }
 }
 
-// --- MODIFICATION #2: Update the Preview ---
-//// This now creates a special version of HomeView for the preview,
-//// ensuring it uses the correct in-memory preview context.
-//#Preview {
-//    let previewContext = PersistenceController.preview.container.viewContext
-//    return HomeView(context: previewContext)
-//        .environment(\.managedObjectContext, previewContext)
-//}
-//// ------------------------------------------
 #Preview {
     ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }

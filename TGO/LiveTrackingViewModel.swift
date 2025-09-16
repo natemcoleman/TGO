@@ -25,10 +25,8 @@ class LiveTrackingViewModel: ObservableObject {
 
     func startRun(for route: Route) {
         print(route.name ?? "Unnamed Route")
-        // --- MODIFIED: Sorting logic moved here from the extension ---
         let routePins = route.routePins as? Set<RoutePin> ?? []
         let sortedPins = routePins.sorted { $0.order < $1.order }.compactMap { $0.pin }
-        // -----------------------------------------------------------
         
         guard !sortedPins.isEmpty else { return }
         print(route.name ?? "Unnamed Route")
@@ -62,10 +60,8 @@ class LiveTrackingViewModel: ObservableObject {
     func splitLap() {
         guard let log = activeLog else { return }
         
-        // --- MODIFIED: Sorting logic moved here from the extension ---
         let loggedPinsSet = log.loggedPins as? Set<LoggedPin> ?? []
         let loggedPins = loggedPinsSet.sorted { $0.order < $1.order }
-        // -----------------------------------------------------------
 
         guard nextSplitIndex < loggedPins.count else { return }
         

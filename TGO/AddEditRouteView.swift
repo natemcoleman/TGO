@@ -42,25 +42,21 @@ struct AddEditRouteView: View {
 
                 Section("Available Checkpoints") {
                     List(availablePins) { pin in
-                        // --- FIX #1: Replaced Button with a tappable Text view ---
                         Text(pin.name ?? "Unnamed")
                             .contentShape(Rectangle()) // Makes the entire row area tappable
                             .onTapGesture {
                                 addPin(pin)
                             }
-                        // ---------------------------------------------------------
                     }
                 }
             }
             .navigationTitle(navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
-            // --- FIX #2: Restructured the toolbar for clarity and reliability ---
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
                 
-                // This places the Edit/Done button correctly.
                 ToolbarItem(placement: .navigationBarTrailing) {
                     EditButton()
                 }
@@ -70,7 +66,6 @@ struct AddEditRouteView: View {
                         .disabled(name.isEmpty || selectedPins.isEmpty)
                 }
             }
-            // ------------------------------------------------------------------
             .onAppear(perform: setupView)
         }
     }

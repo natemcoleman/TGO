@@ -14,7 +14,6 @@ struct AddPinView: View {
     // Allows us to dismiss this sheet
     @Environment(\.dismiss) private var dismiss
     
-    // State for the text fields
     @State private var name: String = ""
     @State private var order: String = ""
     
