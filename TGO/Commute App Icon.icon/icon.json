@@ -1,0 +1,110 @@
+{
+  "fill" : {
+    "solid" : "extended-srgb:0.00000,0.47843,1.00000,1.00000"
+  },
+  "groups" : [
+    {
+      "blur-material" : 0.5,
+      "layers" : [
+        {
+          "glass" : true,
+          "hidden" : false,
+          "image-name" : "09D77F9E-4EEC-432D-AF42-91651D95D216.png",
+          "name" : "09D77F9E-4EEC-432D-AF42-91651D95D216",
+          "position" : {
+            "scale" : 0.5,
+            "translation-in-points" : [
+              84.08465282148305,
+              -69.87765447438301
+            ]
+          }
+        },
+        {
+          "glass" : true,
+          "hidden" : false,
+          "image-name" : "F6AF6A08-3086-468A-BF4A-B125F6C25D20.png",
+          "name" : "F6AF6A08-3086-468A-BF4A-B125F6C25D20",
+          "position" : {
+            "scale" : 0.5,
+            "translation-in-points" : [
+              82.92731556036587,
+              -70.08725098623889
+            ]
+          }
+        },
+        {
+          "image-name" : "263530B9-9ED9-4524-A2B5-C6ABD113B102.png",
+          "name" : "263530B9-9ED9-4524-A2B5-C6ABD113B102",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -129.41217673326983,
+              131.74507703914387
+            ]
+          }
+        },
+        {
+          "image-name" : "C2105D84-40A7-461D-8755-DC8CCE553838.png",
+          "name" : "C2105D84-40A7-461D-8755-DC8CCE553838",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              76.11998537096001,
+              -54.68646381074237
+            ]
+          }
+        },
+        {
+          "hidden" : false,
+          "image-name" : "09C278F4-FCC5-41C4-BDD5-D4A7EC9FA4AF.png",
+          "name" : "09C278F4-FCC5-41C4-BDD5-D4A7EC9FA4AF",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              268.0739386636574,
+              -216.3036002352576
+            ]
+          }
+        },
+        {
+          "fill-specializations" : [
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "extended-srgb:0.00000,0.47843,1.00000,1.00000"
+              }
+            },
+            {
+              "appearance" : "tinted",
+              "value" : {
+                "solid" : "extended-srgb:0.00000,0.47843,1.00000,1.00000"
+              }
+            }
+          ],
+          "hidden" : false,
+          "image-name" : "B0EFD35C-6D9F-457C-8090-AE85579C9705.png",
+          "name" : "B0EFD35C-6D9F-457C-8090-AE85579C9705",
+          "position" : {
+            "scale" : 0.6,
+            "translation-in-points" : [
+              47.27768276122837,
+              -30.628429406416448
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.25
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : "shared"
+  }
+}

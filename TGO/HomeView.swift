@@ -8,11 +8,18 @@ struct HomeView: View {
     
     @StateObject private var runViewModel: LiveTrackingViewModel
     @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
-    @State private var selectedRoute: Route?
-    @State var mapRegion = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 51.507222, longitude: -0.1275), span: MKCoordinateSpan(latitudeDelta: 0.2, longitudeDelta: 0.2))
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Route.createdAt, ascending: true)])
     private var routes: FetchedResults<Route>
+    @FetchRequest(
+        sortDescriptors: [
+            NSSortDescriptor(keyPath: \Pin.order, ascending: true)
+        ],
+        animation: .default
+    )
+    private var allPins: FetchedResults<Pin>
+    
+    @State private var selectedRoute: Route?
     
     init() {
         let context = PersistenceController.shared.container.viewContext
@@ -24,15 +31,19 @@ struct HomeView: View {
     }
     
     var body: some View {
-        if runViewModel.runState == .inactive {
-            setupView
-        } else {
-            liveRunView
+        VStack{
+            Spacer()
+            if runViewModel.runState == .inactive {
+                setupView
+            } else {
+                liveRunView
+            }
         }
     }
     
     private var setupView: some View {
         VStack {
+            Spacer()
             Map(position: $position) { //, interactionModes: []
                 if let route = selectedRoute {
                     let routePins = route.routePins as? Set<RoutePin> ?? []
@@ -40,8 +51,18 @@ struct HomeView: View {
                     
                     ForEach(sortedPins) { pin in
                         Annotation(pin.name ?? "Pin", coordinate: pin.coordinate) {
-                            Image(systemName: "flag.circle.fill")
-                                .foregroundColor(.green)
+                            Image(systemName: "flag.fill")
+                                .foregroundColor(.black)
+                                .padding()
+                                .shadow(radius: 2)
+                        }
+                    }
+                }
+                else{
+                    ForEach(allPins) { pin in
+                        Annotation(pin.name ?? "Pin", coordinate: pin.coordinate) {
+                            Image(systemName: "flag.fill")
+                                .foregroundColor(.black)
                                 .padding()
                                 .shadow(radius: 2)
                         }
@@ -53,6 +74,7 @@ struct HomeView: View {
             .frame(width: 400, height: 300)
             .shadow(radius: 10)
             .mapControls{MapUserLocationButton()}
+            .mapStyle(.standard(pointsOfInterest: .excluding(.store)))
             
             Spacer()
             
@@ -63,7 +85,6 @@ struct HomeView: View {
                 }
             }
             .padding()
-            //            .frame(width: 400)
             .background(Color(UIColor.systemGray6))
             .cornerRadius(12)
             
@@ -93,14 +114,42 @@ struct HomeView: View {
             
             Spacer()
         }
+        .onAppear(perform: setDefaultRoute) // Set the default when the view appears
+        
+    }
+    private func setDefaultRoute() {
+        // This check ensures we only set the default once.
+        if selectedRoute == nil {
+            if let firstRoute = routes.first {
+                // If routes exist, pick the first one from the already fetched list.
+                selectedRoute = firstRoute
+            } else {
+                // If no routes exist, create and save a new one as a backup.
+                let newRoute = Route(context: viewContext)
+                newRoute.name = "My First Route"
+                newRoute.createdAt = Date()
+                
+                do {
+                    try viewContext.save()
+                    // Set the newly created route as the selection.
+                    selectedRoute = newRoute
+                } catch {
+                    print("Failed to create and save backup route: \(error)")
+                }
+            }
+        }
     }
     
     private var liveRunView: some View {
         VStack {
-            Text(formatTime(runViewModel.elapsedTime))
-                .font(.system(size: 64, weight: .bold, design: .monospaced))
-                .padding()
-            
+            VStack{
+                Text(formatTime(runViewModel.splitTime))
+                    .font(.system(size: 64, weight: .bold, design: .rounded))
+                    .padding()
+                Text(formatTime(runViewModel.elapsedTime))
+                    .font(.system(size: 32, design: .rounded))
+                    .padding()
+            }
             List {
                 let sortedLoggedPins: [LoggedPin] = {
                     guard let log = runViewModel.activeLog else { return [] }
@@ -113,12 +162,12 @@ struct HomeView: View {
                         VStack(alignment: .leading) {
                             Text(loggedPin.pin?.name ?? "Unknown Pin")
                                 .font(.headline)
-                            Text("Split: \(formatTime(loggedPin.splitTime))")
-                                .font(.caption.monospaced())
+                            Text("Split: \(formatTime(loggedPin.runningTime))")
+//                                .font(.caption.rounded())
                         }
                         Spacer()
-                        Text(formatTime(loggedPin.runningTime))
-                            .font(.body.monospaced())
+                        Text(formatTime(loggedPin.splitTime))
+//                            .font(.body.rounded())
                     }
                     .listRowBackground(
                         runViewModel.nextSplitIndex == loggedPin.order ? Color.green.opacity(0.2) : Color.clear
@@ -156,8 +205,8 @@ struct HomeView: View {
     private func formatTime(_ interval: TimeInterval) -> String {
         let minutes = Int(interval) / 60
         let seconds = Int(interval) % 60
-        let milliseconds = Int((interval.truncatingRemainder(dividingBy: 1)) * 100)
-        return String(format: "%02d:%02d.%02d", minutes, seconds, milliseconds)
+        //        let milliseconds = Int((interval.truncatingRemainder(dividingBy: 1)) * 100)
+        return String(format: "%02d:%02d", minutes, seconds)
     }
 }
 

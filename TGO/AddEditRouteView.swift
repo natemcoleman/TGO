@@ -4,16 +4,16 @@ import CoreData
 struct AddEditRouteView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
-
+    
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Pin.order, ascending: true)])
     private var allPins: FetchedResults<Pin>
-
+    
     let routeToEdit: Route?
-
+    
     @State private var name: String = ""
     @State private var description: String = ""
     @State private var selectedPins: [Pin] = []
-
+    
     private var availablePins: [Pin] {
         allPins.filter { !selectedPins.contains($0) }
     }
@@ -21,15 +21,17 @@ struct AddEditRouteView: View {
     private var navigationTitle: String {
         routeToEdit == nil ? "New Route" : "Edit Route"
     }
-
+    
     var body: some View {
         NavigationView {
             Form {
                 Section("Route Details") {
                     TextField("Route Name", text: $name)
+                        .textInputAutocapitalization(.words)
                     TextField("Description", text: $description)
+                        .textInputAutocapitalization(.words)
                 }
-
+                
                 Section("Selected Checkpoints") {
                     List {
                         ForEach(selectedPins) { pin in
@@ -39,7 +41,7 @@ struct AddEditRouteView: View {
                         .onDelete(perform: removePin)
                     }
                 }
-
+                
                 Section("Available Checkpoints") {
                     List(availablePins) { pin in
                         Text(pin.name ?? "Unnamed")
@@ -60,7 +62,7 @@ struct AddEditRouteView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     EditButton()
                 }
-
+                
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save", action: saveRoute)
                         .disabled(name.isEmpty || selectedPins.isEmpty)
@@ -94,7 +96,7 @@ struct AddEditRouteView: View {
         
         route.name = name
         route.desc = description
-
+        
         if let oldRoutePins = route.routePins as? Set<RoutePin> {
             oldRoutePins.forEach(viewContext.delete)
         }
@@ -105,7 +107,7 @@ struct AddEditRouteView: View {
             routePin.route = route
             routePin.order = Int32(index)
         }
-
+        
         do {
             try viewContext.save()
             dismiss()
@@ -121,11 +123,11 @@ struct AddEditRouteView: View {
             selectedPins.append(pin)
         }
     }
-
+    
     private func removePin(at offsets: IndexSet) {
         selectedPins.remove(atOffsets: offsets)
     }
-
+    
     private func movePin(from source: IndexSet, to destination: Int) {
         selectedPins.move(fromOffsets: source, toOffset: destination)
     }

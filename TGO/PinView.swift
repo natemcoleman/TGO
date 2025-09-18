@@ -8,17 +8,36 @@
 
 import SwiftUI
 
-struct PinView: View {
+enum pinViewEnum {
+    case pinsMap
+    case pinsList
+}
 
+struct PinView: View {
+    @State private var selectedView: pinViewEnum = .pinsMap
+    
     var body: some View {
-        TabView {
-            Tab("Map View", systemImage: "sailboat") {
-                PinMapView()
+        VStack {
+            Picker("Choose a View", selection: $selectedView) {
+                Text("Map View").tag(pinViewEnum.pinsMap)
+                Text("List View").tag(pinViewEnum.pinsList)
             }
-            Tab("List View", systemImage: "wind") {
+            .pickerStyle(.segmented) // This modifier creates the segmented control UI.
+            .padding()
+            
+            Spacer()
+            switch selectedView {
+            case .pinsMap:
+                PinMapView()
+            case .pinsList:
                 PinListView()
             }
+            
+            Spacer()
         }
-        .tabViewStyle(.page(indexDisplayMode: .always))
     }
+}
+
+#Preview{
+    PinView()
 }

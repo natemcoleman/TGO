@@ -30,12 +30,14 @@ struct RouteListView: View {
                     Button(action: { isShowingAddSheet = true }) {
                         Image(systemName: "plus.circle.fill")
                             .font(.title2)
+                            .foregroundColor(.blue)
                     }
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: { isShowingAddPins = true }) {
                         Image(systemName: "mappin.and.ellipse.circle.fill")
                             .font(.title2)
+                            .foregroundColor(.blue)
                     }
                 }
             }

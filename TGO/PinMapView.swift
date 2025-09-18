@@ -45,7 +45,8 @@ struct PinMapView: View {
     var body: some View {
         
         NavigationView {
-            ZStack {
+            VStack {
+                Spacer()
                 MapReader { proxy in
                     Map(position: $position) {
                         ForEach(pins) { pin in
@@ -67,6 +68,7 @@ struct PinMapView: View {
                                         print("Tapping pin")
                                     }
                             }
+                            
                         }
                     }
                     .onTapGesture { screenPosition in
@@ -80,7 +82,6 @@ struct PinMapView: View {
                         }
                     }
                 }
-                //            .ignoresSafeArea()
                 .frame(width: 400, height: 600)  // Sets a fixed width and height
                 .cornerRadius(50)
                 .shadow(
@@ -97,7 +98,7 @@ struct PinMapView: View {
 
                     HStack(spacing: 20) {
                         modeButton(systemName: "plus", for: .adding)
-                        modeButton(systemName: "minus", for: .deleting)
+                        modeButton(systemName: "trash", for: .deleting)
                     }
                     .padding()
                     .background(.thinMaterial)
@@ -108,6 +109,7 @@ struct PinMapView: View {
             }
             .alert("Name Your Pin", isPresented: $showNameAlert) {
                 TextField("Enter pin name", text: $newPinName)
+                    .textInputAutocapitalization(.words)
                 Button("Save") {
                     if let coordinate = tappedCoordinate {
                         addPin(at: coordinate, name: newPinName)
@@ -122,14 +124,6 @@ struct PinMapView: View {
             }
             .navigationTitle("Map Pins")
             .navigationBarTitleDisplayMode(.inline)
-            // Moved this to tab view
-//            .toolbar {
-//                ToolbarItem(placement: .navigationBarTrailing) {
-//                    NavigationLink(destination: PinListView()) {
-//                        Image(systemName: "list.bullet")
-//                    }
-//                }
-//            }
         }
     }
 
@@ -145,7 +139,7 @@ struct PinMapView: View {
                 // Convert the drag gesture's screen location to a map coordinate
                 if let newCoordinate = proxy.convert(
                     value.location,
-                    from: .local
+                    from: .global
                 ) {
                     // Update the pin's location in the Core Data context
                     pin.latitude = newCoordinate.latitude
@@ -167,9 +161,9 @@ struct PinMapView: View {
 
     /// Provides a view for the pin, making it larger if it's being dragged.
     private func pinAnnotationView(for pin: Pin) -> some View {
-        Image(systemName: "mappin.and.ellipse")
+        Image(systemName: "flag.fill")
             .font(.title)
-            .foregroundStyle(.white, .red)
+            .foregroundStyle(.black)
             .shadow(radius: 2)
             // Add visual feedback for the dragged pin
             .scaleEffect(draggedPin == pin && isDragging ? 1.5 : 1.0)
@@ -250,7 +244,6 @@ struct PinMapView: View {
     }
 }
 
-// This helper extension remains the same
 extension Pin {
     var coordinate: CLLocationCoordinate2D {
         .init(latitude: latitude, longitude: longitude)
