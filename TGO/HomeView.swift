@@ -12,6 +12,7 @@ struct HomeView: View {
     @State private var savedPolyline: String?
     @State private var decodedRoute: [CLLocationCoordinate2D] = []
     @State private var isEnd: Bool = false
+    @State private var polylines: [MKPolyline] = []
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Route.createdAt, ascending: true)])
     private var routes: FetchedResults<Route>
@@ -49,11 +50,15 @@ struct HomeView: View {
         VStack {
             Spacer()
             Map(position: $position) { //, interactionModes: []
-//                if !locationManager.polylineRoute.isEmpty {
-//                    MapPolyline(coordinates: locationManager.polylineRoute)
-//                        .stroke(.blue, lineWidth: 5)
-//                }
+                //                if !locationManager.polylineRoute.isEmpty {
+                //                    MapPolyline(coordinates: locationManager.polylineRoute)
+                //                        .stroke(.blue, lineWidth: 5)
+                //                }
                 
+                ForEach(polylines, id: \.self) { polyline in
+                    MapPolyline(polyline)
+                        .stroke(.blue, lineWidth: 3)
+                }
                 
                 if let route = selectedRoute {
                     let routePins = route.routePins as? Set<RoutePin> ?? []
@@ -98,6 +103,7 @@ struct HomeView: View {
             .background(Color(UIColor.systemGray6))
             .cornerRadius(12)
             .onChange(of: selectedRoute) {
+                updatePolylines()
                 updateMapPosition(for: selectedRoute)
             }
             
@@ -132,6 +138,41 @@ struct HomeView: View {
         .onAppear(perform: setDefaultRoute) // Set the default when the view appears
         
     }
+    
+    private func updatePolylines() {
+        guard let route = selectedRoute else {
+            polylines = []
+            return
+        }
+
+        let logFetchRequest: NSFetchRequest<Log> = Log.fetchRequest()
+        logFetchRequest.predicate = NSPredicate(format: "route == %@", route)
+        logFetchRequest.sortDescriptors = [NSSortDescriptor(key: "startTime", ascending: false)]
+        logFetchRequest.fetchLimit = 5
+
+        do {
+            let recentLogs = try viewContext.fetch(logFetchRequest)
+            var newPolylines: [MKPolyline] = []
+
+            for log in recentLogs {
+                // Ensure the log has a polyline string and it's not empty
+                if let encodedPolyline = log.polyline, !encodedPolyline.isEmpty {
+                    // Decode the polyline string to get coordinates
+                    let decodedCoordinates = Polyline.decode(polyline: encodedPolyline)
+//                    let decodedCoordinates = Polyline(encodedPolyline: encodedPolyline).coordinates
+                    
+                    if decodedCoordinates.count > 1 {
+                        let polyline = MKPolyline(coordinates: decodedCoordinates, count: decodedCoordinates.count)
+                        newPolylines.append(polyline)
+                    }
+                }
+            }
+            self.polylines = newPolylines
+        } catch {
+            print("Failed to fetch logs: \(error)")
+        }
+    }
+    
     private func updateMapPosition(for route: Route?) {
         guard let route = route else {
             position = .userLocation(fallback: .automatic)
@@ -195,13 +236,40 @@ struct HomeView: View {
     
     private var liveRunView: some View {
         VStack {
+            Spacer()
+            Map(position: $position) { //, interactionModes: []
+                if !locationManager.polylineRoute.isEmpty {
+                    MapPolyline(coordinates: locationManager.polylineRoute)
+                        .stroke(.blue, lineWidth: 5)
+                }
+                
+                if let route = selectedRoute {
+                    let routePins = route.routePins as? Set<RoutePin> ?? []
+                    let sortedPins = routePins.sorted { $0.order < $1.order }.compactMap { $0.pin }
+                    
+                    ForEach(sortedPins) { pin in
+                        Annotation(pin.name ?? "Pin", coordinate: pin.coordinate) {
+                            Image(systemName: "flag.fill")
+                                .foregroundColor(.black)
+                                .padding()
+                                .shadow(radius: 2)
+                        }
+                    }
+                }
+                UserAnnotation()
+            }
+            .cornerRadius(50)
+            .frame(width: 400, height: 200)
+            .mapControls{MapUserLocationButton()}
+            .mapStyle(.standard(pointsOfInterest: .excluding(.store)))
+            
             VStack{
                 Text(formatTime(runViewModel.splitTime))
-                    .font(.system(size: 64, weight: .bold, design: .rounded))
-                    .padding()
+                    .font(.system(size: 48, weight: .bold, design: .rounded))
+                //                    .padding()
                 Text(formatTime(runViewModel.elapsedTime))
-                    .font(.system(size: 32, design: .rounded))
-                    .padding()
+                    .font(.system(size: 24, design: .rounded))
+                //                    .padding()
             }
             List {
                 let sortedLoggedPins: [LoggedPin] = {
@@ -227,53 +295,50 @@ struct HomeView: View {
                     )
                 }
             }
+            .padding()
             
-            Spacer()
+            //            Spacer()
             
             HStack(spacing: 20) {
-                Button(action: {
-                    runViewModel.finishRun()
-                    locationManager.stopTracking()
-                    saveRoute()
-                })
-                {
-                    Image(systemName: "stop.circle")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 100, height: 100)
-                }
-                .buttonStyle(.borderedProminent).tint(.red)
+                //                Button(action: {
+                //                    runViewModel.finishRun()
+                //                    locationManager.stopTracking()
+                //                    saveRoute()
+                //                })
+                //                {
+                //                    Image(systemName: "stop.circle")
+                //                        .resizable()
+                //                        .scaledToFit()
+                //                        .frame(width: 100, height: 100)
+                //                }
+                //                .buttonStyle(.borderedProminent).tint(.red)
                 
                 Button(action: {
-                    runViewModel.splitLap()
                     if runViewModel.nextSplitIndex == runViewModel.numPins {
                         locationManager.stopTracking()
                         saveRoute()
+                        isEnd = false
                     }
-                    if runViewModel.nextSplitIndex == runViewModel.numPins{
+                    if runViewModel.nextSplitIndex == runViewModel.numPins-1{
                         isEnd = true
                     }
+                    runViewModel.splitLap()
                 })
                 {
-//                    Image(systemName: "stopwatch")
-//                        .resizable()
-//                        .scaledToFit()
-//                        .frame(width: 100, height: 100)
                     if isEnd {
-                            Image(systemName: "flag.checkered")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 100, height: 100)
-                        } else {
-                            Image(systemName: "stopwatch")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 100, height: 100)
-                        }
+                        Image(systemName: "flag.checkered")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 400, height: 50)
+                    } else {
+                        Image(systemName: "stopwatch")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 400, height: 50)
+                    }
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(isEnd ? .black : .green)
-//                .buttonStyle(.borderedProminent).tint(.green)
             }
             .padding()
             
@@ -291,9 +356,6 @@ struct HomeView: View {
     private func saveRoute() {
         let polyline = Polyline.encode(coordinates: locationManager.polylineRoute)
         runViewModel.activeLog?.polyline = polyline
-//        UserDefaults.standard.set(polyline, forKey: polylineKey)
-//        self.savedPolyline = polyline
-//        print("Route saved! Polyline: \(polyline)")
     }
 }
 

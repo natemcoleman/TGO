@@ -2,6 +2,12 @@ import SwiftUI
 import CoreData
 import MapKit
 
+let strokeStyle = StrokeStyle(
+    lineWidth: 5,
+    lineCap: .round,
+    lineJoin: .round,
+)
+
 struct LogDetailView: View {
     let log: Log
     @State private var isShowingEditSheet = false
@@ -16,17 +22,17 @@ struct LogDetailView: View {
             Map(position: $mapPosition) {
                 if !decodedRoute.isEmpty {
                     MapPolyline(coordinates: decodedRoute)
-                        .stroke(.blue, lineWidth: 5)
+                        .stroke(.blue, style: strokeStyle)
                 }
-//                
-//                ForEach(sortedLoggedPins) { pin in
-//                    Annotation(pin.name ?? "Pin", coordinate: pin.coordinate) {
-//                        Image(systemName: "flag.fill")
-//                            .foregroundColor(.black)
-//                            .padding()
-//                            .shadow(radius: 2)
-//                    }
-//                }
+                //
+                //                ForEach(sortedLoggedPins) { pin in
+                //                    Annotation(pin.name ?? "Pin", coordinate: pin.coordinate) {
+                //                        Image(systemName: "flag.fill")
+                //                            .foregroundColor(.black)
+                //                            .padding()
+                //                            .shadow(radius: 2)
+                //                    }
+                //                }
             }
             .mapStyle(.standard)
             .cornerRadius(50)
@@ -73,6 +79,16 @@ struct LogDetailView: View {
                         }
                     }
                 }
+//                Section("Polyline") {
+//                    HStack {
+//                        Text("Polyline:")
+//                            .font(.caption.monospaced())
+//                            .foregroundColor(.secondary)
+//                        Spacer()
+//                        Text(log.polyline ?? "")
+//                            .textSelection(.enabled)
+//                    }
+//                }
             }
             .navigationTitle("Run Details")
             .navigationBarTitleDisplayMode(.inline)
