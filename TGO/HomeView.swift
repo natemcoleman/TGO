@@ -120,7 +120,7 @@ struct HomeView: View {
         .onAppear(perform: setDefaultRoute) // Set the default when the view appears
         
     }
-    private func updateMapPosition(for allPins: [Pin]) {
+    private func updateMapPositionAllPins(for allPins: [Pin]) {
         // 1. The map function now correctly works on an array of Pins,
         // creating an array of coordinates.
         let coordinates = allPins.map {
