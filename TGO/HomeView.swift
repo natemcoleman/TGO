@@ -11,6 +11,7 @@ struct HomeView: View {
     @StateObject private var locationManager = LocationManager()
     @State private var savedPolyline: String?
     @State private var decodedRoute: [CLLocationCoordinate2D] = []
+    @State private var isEnd: Bool = false
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Route.createdAt, ascending: true)])
     private var routes: FetchedResults<Route>
@@ -249,14 +250,30 @@ struct HomeView: View {
                         locationManager.stopTracking()
                         saveRoute()
                     }
+                    if runViewModel.nextSplitIndex == runViewModel.numPins{
+                        isEnd = true
+                    }
                 })
                 {
-                    Image(systemName: "stopwatch")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 100, height: 100)
+//                    Image(systemName: "stopwatch")
+//                        .resizable()
+//                        .scaledToFit()
+//                        .frame(width: 100, height: 100)
+                    if isEnd {
+                            Image(systemName: "flag.checkered")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 100, height: 100)
+                        } else {
+                            Image(systemName: "stopwatch")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 100, height: 100)
+                        }
                 }
-                .buttonStyle(.borderedProminent).tint(.green)
+                .buttonStyle(.borderedProminent)
+                .tint(isEnd ? .black : .green)
+//                .buttonStyle(.borderedProminent).tint(.green)
             }
             .padding()
             
