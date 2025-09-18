@@ -14,6 +14,7 @@ class LiveTrackingViewModel: ObservableObject {
     @Published var activeLog: Log?
     @Published var nextSplitIndex: Int = 1
     @Published var splitTime: TimeInterval = 0
+    @Published var numPins: Int = 1
 
     private var timer: Timer?
     private var startTime: Date?
@@ -21,6 +22,7 @@ class LiveTrackingViewModel: ObservableObject {
     private var accumulatedTime: TimeInterval = 0
     private var viewContext: NSManagedObjectContext
     private var lastTime: Date?
+    
 
     init(context: NSManagedObjectContext) {
         self.viewContext = context
@@ -60,6 +62,12 @@ class LiveTrackingViewModel: ObservableObject {
         splitTimer()
         runState = .running
         lastTime = Date()
+        
+        guard let log = activeLog else { return }
+        
+        let loggedPinsSet = log.loggedPins as? Set<LoggedPin> ?? []
+        let loggedPins = loggedPinsSet.sorted { $0.order < $1.order }
+        numPins = loggedPins.count - 1
     }
 
     func splitLap() {

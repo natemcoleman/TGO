@@ -26,6 +26,8 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     )
     
     @Published var userLocation: CLLocationCoordinate2D?
+    @Published var polylineRoute: [CLLocationCoordinate2D] = []
+    @Published var isTracking = false
 
     override init() {
         super.init()
@@ -36,9 +38,22 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         // manager.requestAlwaysAuthorization()
         manager.startUpdatingLocation()
     }
+    
+    func startTracking() {
+        polylineRoute = []
+        isTracking = true
+        manager.startUpdatingLocation()
+    }
+
+    func stopTracking() {
+        isTracking = false
+        manager.stopUpdatingLocation()
+    }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let loc = locations.last else { return }
+        let coordinate = loc.coordinate
+        polylineRoute.append(coordinate)
         DispatchQueue.main.async {
             self.userLocation = loc.coordinate
             self.region.center = loc.coordinate

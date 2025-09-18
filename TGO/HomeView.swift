@@ -8,6 +8,9 @@ struct HomeView: View {
     
     @StateObject private var runViewModel: LiveTrackingViewModel
     @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
+    @StateObject private var locationManager = LocationManager()
+    @State private var savedPolyline: String?
+    @State private var decodedRoute: [CLLocationCoordinate2D] = []
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Route.createdAt, ascending: true)])
     private var routes: FetchedResults<Route>
@@ -45,6 +48,12 @@ struct HomeView: View {
         VStack {
             Spacer()
             Map(position: $position) { //, interactionModes: []
+//                if !locationManager.polylineRoute.isEmpty {
+//                    MapPolyline(coordinates: locationManager.polylineRoute)
+//                        .stroke(.blue, lineWidth: 5)
+//                }
+                
+                
                 if let route = selectedRoute {
                     let routePins = route.routePins as? Set<RoutePin> ?? []
                     let sortedPins = routePins.sorted { $0.order < $1.order }.compactMap { $0.pin }
@@ -104,6 +113,8 @@ struct HomeView: View {
             
             Button(action: {
                 if let route = selectedRoute {
+                    decodedRoute = [] // Clear old route from map
+                    locationManager.startTracking()
                     runViewModel.startRun(for: route)
                 }
             }) {
@@ -119,39 +130,6 @@ struct HomeView: View {
         }
         .onAppear(perform: setDefaultRoute) // Set the default when the view appears
         
-    }
-    private func updateMapPositionAllPins(for allPins: [Pin]) {
-        // 1. The map function now correctly works on an array of Pins,
-        // creating an array of coordinates.
-        let coordinates = allPins.map {
-            CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude)
-        }
-            
-        // 2. The rest of your logic now works because `coordinates` is an array.
-        guard !coordinates.isEmpty else { return }
-        
-        if coordinates.count == 1 {
-            // Center on the single pin with a fixed zoom
-            let region = MKCoordinateRegion(center: coordinates[0], latitudinalMeters: 10000, longitudinalMeters: 10000)
-            position = .region(region)
-            return
-        }
-
-        // Find the min and max latitude and longitude
-        let minLat = coordinates.map { $0.latitude }.min()!
-        let maxLat = coordinates.map { $0.latitude }.max()!
-        let minLon = coordinates.map { $0.longitude }.min()!
-        let maxLon = coordinates.map { $0.longitude }.max()!
-
-        // Create a region that encompasses all coordinates
-        let center = CLLocationCoordinate2D(latitude: (minLat + maxLat) / 2, longitude: (minLon + maxLon) / 2)
-        let span = MKCoordinateSpan(latitudeDelta: (maxLat - minLat) * 1.5, longitudeDelta: (maxLon - minLon) * 1.5) // 1.5x padding
-        let region = MKCoordinateRegion(center: center, span: span)
-        
-        // Update the map's position with a smooth animation
-        withAnimation {
-            position = .region(region)
-        }
     }
     private func updateMapPosition(for route: Route?) {
         guard let route = route else {
@@ -252,7 +230,11 @@ struct HomeView: View {
             Spacer()
             
             HStack(spacing: 20) {
-                Button(action: { runViewModel.finishRun() })
+                Button(action: {
+                    runViewModel.finishRun()
+                    locationManager.stopTracking()
+                    saveRoute()
+                })
                 {
                     Image(systemName: "stop.circle")
                         .resizable()
@@ -261,7 +243,13 @@ struct HomeView: View {
                 }
                 .buttonStyle(.borderedProminent).tint(.red)
                 
-                Button(action: { runViewModel.splitLap() })
+                Button(action: {
+                    runViewModel.splitLap()
+                    if runViewModel.nextSplitIndex == runViewModel.numPins {
+                        locationManager.stopTracking()
+                        saveRoute()
+                    }
+                })
                 {
                     Image(systemName: "stopwatch")
                         .resizable()
@@ -281,6 +269,14 @@ struct HomeView: View {
         let seconds = Int(interval) % 60
         //        let milliseconds = Int((interval.truncatingRemainder(dividingBy: 1)) * 100)
         return String(format: "%02d:%02d", minutes, seconds)
+    }
+    
+    private func saveRoute() {
+        let polyline = Polyline.encode(coordinates: locationManager.polylineRoute)
+        runViewModel.activeLog?.polyline = polyline
+//        UserDefaults.standard.set(polyline, forKey: polylineKey)
+//        self.savedPolyline = polyline
+//        print("Route saved! Polyline: \(polyline)")
     }
 }
 
