@@ -13,11 +13,14 @@ class LiveTrackingViewModel: ObservableObject {
     @Published var elapsedTime: TimeInterval = 0
     @Published var activeLog: Log?
     @Published var nextSplitIndex: Int = 1
+    @Published var splitTime: TimeInterval = 0
 
     private var timer: Timer?
     private var startTime: Date?
+    private var currentTime: Date?
     private var accumulatedTime: TimeInterval = 0
     private var viewContext: NSManagedObjectContext
+    private var lastTime: Date?
 
     init(context: NSManagedObjectContext) {
         self.viewContext = context
@@ -54,7 +57,9 @@ class LiveTrackingViewModel: ObservableObject {
         accumulatedTime = 0
         startTime = Date()
         startTimer()
+        splitTimer()
         runState = .running
+        lastTime = Date()
     }
 
     func splitLap() {
@@ -71,12 +76,14 @@ class LiveTrackingViewModel: ObservableObject {
         let currentTime = currentElapsedTime()
         currentLoggedPin.runningTime = currentTime
         currentLoggedPin.splitTime = currentTime - previousLoggedPin.runningTime
-        
+                
         if nextSplitIndex == loggedPins.count - 1 {
             finishRun()
         } else {
             nextSplitIndex += 1
         }
+        splitTimer()
+        lastTime = Date()
     }
 
     func finishRun() {
@@ -90,6 +97,18 @@ class LiveTrackingViewModel: ObservableObject {
             }
         }
         reset()
+    }
+    func pause() {
+        timer?.invalidate()
+        // Add the time elapsed since the last start/resume to the total.
+        accumulatedTime += Date().timeIntervalSince(startTime ?? Date())
+        runState = .paused
+    }
+
+    func resume() {
+        startTime = Date() // Reset the start time for the new interval
+        runState = .running
+        startTimer()
     }
 
     private func reset() {
@@ -107,8 +126,17 @@ class LiveTrackingViewModel: ObservableObject {
         }
     }
     
+    private func splitTimer() {
+        timer = Timer.scheduledTimer(withTimeInterval: 0.01, repeats: true) { [weak self] _ in
+            self?.splitTime = self?.currentSplitTime() ?? 0
+        }
+    }
+    
     private func currentElapsedTime() -> TimeInterval {
         return accumulatedTime + Date().timeIntervalSince(startTime ?? Date())
+    }
+    private func currentSplitTime() -> TimeInterval {
+        return Date().timeIntervalSince(lastTime ?? Date())
     }
 }
 

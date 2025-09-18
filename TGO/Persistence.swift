@@ -6,6 +6,7 @@
 //
 
 import CoreData
+import SwiftUI
 
 struct PersistenceController {
     static let shared = PersistenceController()
@@ -96,8 +97,6 @@ struct PersistenceController {
                 route1.createdAt = Date()
                 route1.desc = "Regular route to work"
 
-                // 3. Link the Pins to the Route using the RoutePin join entity
-                // This is the crucial step.
                 let routePin1 = RoutePin(context: viewContext)
                 routePin1.order = 0
                 routePin1.route = route1  // Link to the route
@@ -122,6 +121,22 @@ struct PersistenceController {
                 routePin5.order = 4
                 routePin5.route = route1  // Link to the route
                 routePin5.pin = pin5 // Link to the pin
+                
+                let route2 = Route(context: viewContext)
+                route2.id = UUID()
+                route2.name = "Test 2"
+                route2.createdAt = Date()
+                route2.desc = ""
+                
+                let routePin6 = RoutePin(context: viewContext)
+                routePin6.order = 1
+                routePin6.route = route2  // Link to the route
+                routePin6.pin = pin1 // Link to the pin
+                
+                let routePin7 = RoutePin(context: viewContext)
+                routePin7.order = 2
+                routePin7.route = route2  // Link to the route
+                routePin7.pin = pin5 // Link to the pin
 
                 try viewContext.save()
             } else {
