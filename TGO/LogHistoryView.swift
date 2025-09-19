@@ -65,9 +65,15 @@ struct LogCardView: View {
             Text(log.route?.name ?? "Untitled Route")
                 .font(.headline)
                 .fontWeight(.bold)
-            Text(log.startTime ?? Date(), style: .date)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+            HStack{
+                Text(log.startTime ?? Date(), style: .date)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                Spacer()
+                Text(log.startTime ?? Date(), style: .time)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
             Divider()
             HStack {
                 Label("\(log.loggedPins?.count ?? 0) Checkpoints", systemImage: "mappin.and.ellipse")

@@ -1,6 +1,7 @@
 import Foundation
 import CoreData
 import Combine
+import ActivityKit // 1. Import ActivityKit
 
 enum LiveRunState {
     case inactive
@@ -15,7 +16,7 @@ class LiveTrackingViewModel: ObservableObject {
     @Published var nextSplitIndex: Int = 1
     @Published var splitTime: TimeInterval = 0
     @Published var numPins: Int = 1
-
+    
     private var timer: Timer?
     private var startTime: Date?
     private var currentTime: Date?
@@ -23,11 +24,12 @@ class LiveTrackingViewModel: ObservableObject {
     private var viewContext: NSManagedObjectContext
     private var lastTime: Date?
     
-
+    private var runActivity: Activity<TgoActivityAttributes>?
+    
     init(context: NSManagedObjectContext) {
         self.viewContext = context
     }
-
+    
     func startRun(for route: Route) {
         print(route.name ?? "Unnamed Route")
         let routePins = route.routePins as? Set<RoutePin> ?? []
@@ -35,12 +37,12 @@ class LiveTrackingViewModel: ObservableObject {
         let sortedRoutePins = routePins.sorted { $0.order < $1.order }
         
         guard !sortedRoutePins.isEmpty else { return }
-
+        
         let newLog = Log(context: viewContext)
         newLog.id = UUID()
         newLog.startTime = Date()
         newLog.route = route
-
+        
         // Iterate over the RoutePins to access displayName
         for routePin in sortedRoutePins {
             let loggedPin = LoggedPin(context: viewContext)
@@ -64,22 +66,24 @@ class LiveTrackingViewModel: ObservableObject {
         startTime = Date()
         startTimer()
         splitTimer()
-                runState = .running
-                lastTime = Date()
-                
-                guard let log = activeLog else { return }
-                
-                let loggedPinsSet = log.loggedPins as? Set<LoggedPin> ?? []
-                let loggedPins = loggedPinsSet.sorted { $0.order < $1.order }
-                numPins = loggedPins.count - 1
+        runState = .running
+        lastTime = Date()
+        
+        guard let log = activeLog else { return }
+        
+        let loggedPinsSet = log.loggedPins as? Set<LoggedPin> ?? []
+        let loggedPins = loggedPinsSet.sorted { $0.order < $1.order }
+        numPins = loggedPins.count - 1
+        
+        startLiveActivity(sortedRoutePins: sortedRoutePins)
     }
-
+    
     func splitLap() {
         guard let log = activeLog else { return }
         
         let loggedPinsSet = log.loggedPins as? Set<LoggedPin> ?? []
         let loggedPins = loggedPinsSet.sorted { $0.order < $1.order }
-
+        
         guard nextSplitIndex < loggedPins.count else { return }
         
         let currentLoggedPin = loggedPins[nextSplitIndex]
@@ -88,7 +92,9 @@ class LiveTrackingViewModel: ObservableObject {
         let currentTime = currentElapsedTime()
         currentLoggedPin.runningTime = currentTime
         currentLoggedPin.splitTime = currentTime - previousLoggedPin.runningTime
-                
+        
+        updateLiveActivity(loggedPins: loggedPins, nextIndex: nextSplitIndex + 1)
+        
         if nextSplitIndex == loggedPins.count - 1 {
             finishRun()
         } else {
@@ -97,7 +103,7 @@ class LiveTrackingViewModel: ObservableObject {
         splitTimer()
         lastTime = Date()
     }
-
+    
     func finishRun() {
         timer?.invalidate()
         if let log = activeLog {
@@ -108,6 +114,8 @@ class LiveTrackingViewModel: ObservableObject {
                 print("Error saving log: \(error.localizedDescription)")
             }
         }
+        endLiveActivity()
+        
         reset()
     }
     func pause() {
@@ -116,13 +124,68 @@ class LiveTrackingViewModel: ObservableObject {
         accumulatedTime += Date().timeIntervalSince(startTime ?? Date())
         runState = .paused
     }
-
+    
     func resume() {
         startTime = Date() // Reset the start time for the new interval
         runState = .running
         startTimer()
     }
-
+    
+    private func formatTime(_ interval: TimeInterval) -> String {
+        let minutes = Int(interval) / 60
+        let seconds = Int(interval) % 60
+        let milliseconds = Int((interval.truncatingRemainder(dividingBy: 1)) * 100)
+        return String(format: "%02d:%02d.%02d", minutes, seconds, milliseconds)
+    }
+    
+    private func startLiveActivity(sortedRoutePins: [RoutePin]) {
+        let attributes = TgoActivityAttributes(routeName: activeLog?.route?.name ?? "My Route")
+        let initialState = TgoActivityAttributes.ContentState(
+            currentCheckpoint: sortedRoutePins.first?.displayName ?? "Start",
+            nextCheckpoint: sortedRoutePins.count > 1 ? sortedRoutePins[1].displayName ?? "Next" : "Finish",
+            elapsedTime: "00:00.00"
+        )
+        
+        let activityContent = ActivityContent(state: initialState, staleDate: nil)
+        
+        do {
+            runActivity = try Activity<TgoActivityAttributes>.request(
+                attributes: attributes,
+                content: activityContent,
+                pushType: nil)
+            print("Live Activity started successfully.")
+        } catch (let error) {
+            print("Error starting Live Activity: \(error.localizedDescription)")
+        }
+    }
+    
+    private func updateLiveActivity(loggedPins: [LoggedPin], nextIndex: Int) {
+        let newContentState = TgoActivityAttributes.ContentState(
+            currentCheckpoint: loggedPins[nextIndex - 1].displayName ?? "Checkpoint",
+            nextCheckpoint: nextIndex < loggedPins.count ? loggedPins[nextIndex].displayName ?? "Next" : "Finish",
+            elapsedTime: formatTime(elapsedTime)
+        )
+        
+        Task {
+            let activityContent = ActivityContent(state: newContentState, staleDate: nil)
+            await runActivity?.update(activityContent)
+        }
+    }
+    
+    private func endLiveActivity() {
+        Task {
+            let finalState = TgoActivityAttributes.ContentState(
+                currentCheckpoint: "Finished",
+                nextCheckpoint: "",
+                elapsedTime: formatTime(elapsedTime)
+            )
+            let finalContent = ActivityContent(state: finalState, staleDate: nil)
+            
+            await runActivity?.end(finalContent, dismissalPolicy: .immediate)
+            print("Live Activity ended.")
+        }
+    }
+    
     private func reset() {
         timer?.invalidate()
         runState = .inactive
