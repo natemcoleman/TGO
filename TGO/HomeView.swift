@@ -112,10 +112,15 @@ struct HomeView: View {
             
             if let route = selectedRoute {
                 let routePins = route.routePins as? Set<RoutePin> ?? []
-                let sortedPins = routePins.sorted { $0.order < $1.order }.compactMap { $0.pin }
+                let sortedRoutePins = routePins.sorted { $0.order < $1.order }
                 
-                List(sortedPins) { pin in
-                    Text(pin.name ?? "Unnamed Pin")
+                List(sortedRoutePins, id: \.self) { routePin in
+                    Text("\(routePin.displayName ?? "Checkpoint")")
+//                    if routePin.onEnter {
+//                        Text("\(routePin.displayName ?? "Checkpoint")")
+//                    } else {
+//                        Text("\(routePin.displayName ?? "Checkpoint")")
+//                    }
                 }
             }
             
