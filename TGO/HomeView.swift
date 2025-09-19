@@ -13,6 +13,7 @@ struct HomeView: View {
     @State private var decodedRoute: [CLLocationCoordinate2D] = []
     @State private var isEnd: Bool = false
     @State private var polylines: [MKPolyline] = []
+    @State private var currSplitIndex = 0
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Route.createdAt, ascending: true)])
     private var routes: FetchedResults<Route>
@@ -49,11 +50,7 @@ struct HomeView: View {
     private var setupView: some View {
         VStack {
             Spacer()
-            Map(position: $position) { //, interactionModes: []
-                //                if !locationManager.polylineRoute.isEmpty {
-                //                    MapPolyline(coordinates: locationManager.polylineRoute)
-                //                        .stroke(.blue, lineWidth: 5)
-                //                }
+            Map(position: $position) {
                 
                 ForEach(polylines, id: \.self) { polyline in
                     MapPolyline(polyline)
@@ -62,14 +59,20 @@ struct HomeView: View {
                 
                 if let route = selectedRoute {
                     let routePins = route.routePins as? Set<RoutePin> ?? []
-                    let sortedPins = routePins.sorted { $0.order < $1.order }.compactMap { $0.pin }
+                    // Sort the RoutePin objects directly
+                    let sortedRoutePins = routePins.sorted { $0.order < $1.order }
                     
-                    ForEach(sortedPins) { pin in
-                        Annotation(pin.name ?? "Pin", coordinate: pin.coordinate) {
-                            Image(systemName: "flag.fill")
-                                .foregroundColor(.black)
-                                .padding()
-                                .shadow(radius: 2)
+                    // Iterate over the sorted RoutePin objects
+                    ForEach(sortedRoutePins, id: \.self) { routePin in
+                        // Safely unwrap the associated Pin
+                        if let pin = routePin.pin {
+                            // Use displayName, falling back to the pin's name
+                            Annotation(routePin.displayName ?? pin.name ?? "Pin", coordinate: pin.coordinate) {
+                                Image(systemName: "flag.fill")
+                                    .foregroundColor(.black)
+                                    .padding()
+                                    .shadow(radius: 2)
+                            }
                         }
                     }
                 }
@@ -144,22 +147,22 @@ struct HomeView: View {
             polylines = []
             return
         }
-
+        
         let logFetchRequest: NSFetchRequest<Log> = Log.fetchRequest()
         logFetchRequest.predicate = NSPredicate(format: "route == %@", route)
         logFetchRequest.sortDescriptors = [NSSortDescriptor(key: "startTime", ascending: false)]
         logFetchRequest.fetchLimit = 5
-
+        
         do {
             let recentLogs = try viewContext.fetch(logFetchRequest)
             var newPolylines: [MKPolyline] = []
-
+            
             for log in recentLogs {
                 // Ensure the log has a polyline string and it's not empty
                 if let encodedPolyline = log.polyline, !encodedPolyline.isEmpty {
                     // Decode the polyline string to get coordinates
                     let decodedCoordinates = Polyline.decode(polyline: encodedPolyline)
-//                    let decodedCoordinates = Polyline(encodedPolyline: encodedPolyline).coordinates
+                    //                    let decodedCoordinates = Polyline(encodedPolyline: encodedPolyline).coordinates
                     
                     if decodedCoordinates.count > 1 {
                         let polyline = MKPolyline(coordinates: decodedCoordinates, count: decodedCoordinates.count)
@@ -271,31 +274,40 @@ struct HomeView: View {
                     .font(.system(size: 24, design: .rounded))
                 //                    .padding()
             }
-            List {
-                let sortedLoggedPins: [LoggedPin] = {
-                    guard let log = runViewModel.activeLog else { return [] }
-                    let loggedPinsSet = log.loggedPins as? Set<LoggedPin> ?? []
-                    return loggedPinsSet.sorted { $0.order < $1.order }
-                }()
-                
-                ForEach(sortedLoggedPins) { loggedPin in
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(loggedPin.pin?.name ?? "Unknown Pin")
-                                .font(.headline)
-                            Text("Split: \(formatTime(loggedPin.runningTime))")
-                            //                                .font(.caption.rounded())
+            
+            ScrollViewReader { proxy in
+                List {
+                    let sortedLoggedPins: [LoggedPin] = {
+                        guard let log = runViewModel.activeLog else { return [] }
+                        let loggedPinsSet = log.loggedPins as? Set<LoggedPin> ?? []
+                        return loggedPinsSet.sorted { $0.order < $1.order }
+                    }()
+                    
+                    ForEach(sortedLoggedPins) { loggedPin in
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(loggedPin.displayName ?? loggedPin.pin?.name ?? "Unknown Pin")
+                                    .font(.headline)
+                                Text("Time: \(formatTime(loggedPin.runningTime))")
+                                    .font(.caption.monospaced())
+                            }
+                            Spacer()
+                            Text(formatTime(loggedPin.splitTime))
+                                .font(.body.monospaced())
                         }
-                        Spacer()
-                        Text(formatTime(loggedPin.splitTime))
-                        //                            .font(.body.rounded())
+                        .id(loggedPin.order) // 1. Assign an ID to each row
+                        .listRowBackground(
+                            runViewModel.nextSplitIndex == loggedPin.order ? Color.green.opacity(0.2) : Color.clear
+                        )
                     }
-                    .listRowBackground(
-                        runViewModel.nextSplitIndex == loggedPin.order ? Color.green.opacity(0.2) : Color.clear
-                    )
+                }
+                .onChange(of: runViewModel.nextSplitIndex) { // 2. Detect when the index changes
+                    print("Trying to scroll.")
+                    withAnimation {
+                        proxy.scrollTo(runViewModel.nextSplitIndex, anchor: .center)
+                    }
                 }
             }
-            .padding()
             
             //            Spacer()
             
@@ -322,6 +334,7 @@ struct HomeView: View {
                     if runViewModel.nextSplitIndex == runViewModel.numPins-1{
                         isEnd = true
                     }
+                    currSplitIndex+=1
                     runViewModel.splitLap()
                 })
                 {

@@ -14,6 +14,9 @@ struct AddEditRouteView: View {
     @State private var description: String = ""
     @State private var selectedPins: [Pin] = []
     
+    @State private var exitCheckpoints: Set<Pin.ID> = []
+    
+    
     private var availablePins: [Pin] {
         allPins.filter { !selectedPins.contains($0) }
     }
@@ -32,10 +35,33 @@ struct AddEditRouteView: View {
                         .textInputAutocapitalization(.words)
                 }
                 
+                // In the body of AddEditRouteView.swift
+
                 Section("Selected Checkpoints") {
                     List {
                         ForEach(selectedPins) { pin in
-                            Text(pin.name ?? "Unnamed")
+                            HStack {
+                                // This now correctly reflects whether an exit pin should be created
+                                Image(systemName: exitCheckpoints.contains(pin.id!) ? "checkmark.square.fill" : "square")
+                                    .foregroundColor(.accentColor)
+                                
+                                Text(pin.name ?? "Unnamed")
+                                
+                                Spacer()
+                                
+                                Text("(Tap box for stoplight)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                // This correctly toggles the pin's ID in the set
+                                if exitCheckpoints.contains(pin.id!) {
+                                    exitCheckpoints.remove(pin.id!)
+                                } else {
+                                    exitCheckpoints.insert(pin.id!)
+                                }
+                            }
                         }
                         .onMove(perform: movePin)
                         .onDelete(perform: removePin)
@@ -74,15 +100,50 @@ struct AddEditRouteView: View {
     
     // MARK: - Functions
     
+    // In AddEditRouteView.swift
+
+    // In AddEditRouteView.swift
+
     private func setupView() {
         if let route = routeToEdit {
             name = route.name ?? ""
             description = route.desc ?? ""
             
             let routePins = route.routePins as? Set<RoutePin> ?? []
-            selectedPins = routePins
-                .sorted { $0.order < $1.order }
-                .compactMap { $0.pin }
+            
+            // --- THIS LOGIC PREVENTS DUPLICATE IDs ---
+            
+            // Use a dictionary to ensure each Pin is processed only once.
+            var uniquePins = [Pin: Bool]()
+
+            // Sort by order to process correctly.
+            let sortedRoutePins = routePins.sorted { $0.order < $1.order }
+            
+            for routePin in sortedRoutePins {
+                guard let pin = routePin.pin else { continue }
+                
+                // If the pin is an exit event (!onEnter), mark it as 'true' in our dictionary.
+                if !routePin.onEnter {
+                    uniquePins[pin] = true
+                } else if uniquePins[pin] == nil {
+                    // Otherwise, if we haven't seen this pin yet, add it as 'false' (not an exit).
+                    uniquePins[pin] = false
+                }
+            }
+            
+            // Now, build the final arrays from the unique dictionary.
+            // 1. Get the unique pins (the dictionary keys).
+            let finalPins = Array(uniquePins.keys)
+            
+            // 2. Sort them to maintain a somewhat consistent order.
+            selectedPins = finalPins.sorted { p1, p2 in
+                let order1 = sortedRoutePins.first { $0.pin == p1 }?.order ?? 0
+                let order2 = sortedRoutePins.first { $0.pin == p2 }?.order ?? 0
+                return order1 < order2
+            }
+            
+            // 3. Populate exitCheckpoints based on the dictionary values.
+            exitCheckpoints = Set(uniquePins.filter { $0.value == true }.map { $0.key.id! })
         }
     }
     
@@ -96,16 +157,33 @@ struct AddEditRouteView: View {
         
         route.name = name
         route.desc = description
-        
+
+        // Clear out old RoutePins to avoid duplicates
         if let oldRoutePins = route.routePins as? Set<RoutePin> {
             oldRoutePins.forEach(viewContext.delete)
         }
         
-        for (index, pin) in selectedPins.enumerated() {
-            let routePin = RoutePin(context: viewContext)
-            routePin.pin = pin
-            routePin.route = route
-            routePin.order = Int32(index)
+        var currentOrder: Int32 = 0
+        for pin in selectedPins {
+            let enterRoutePin = RoutePin(context: viewContext)
+            enterRoutePin.pin = pin
+            enterRoutePin.route = route
+            enterRoutePin.order = currentOrder
+            enterRoutePin.onEnter = true
+            enterRoutePin.displayName = pin.name
+            currentOrder += 1
+
+            // 2. If the checkbox was checked, create the 'onExit' RoutePin
+            if exitCheckpoints.contains(pin.id) {
+                let exitRoutePin = RoutePin(context: viewContext)
+                exitRoutePin.pin = pin // It still links to the same, original Pin
+                exitRoutePin.route = route
+                exitRoutePin.order = currentOrder
+                exitRoutePin.onEnter = false
+                exitRoutePin.displayName = "\(pin.name ?? "Unnamed") duration"
+                enterRoutePin.displayName = "Time to \(pin.name ?? "Unnamed")"
+                currentOrder += 1
+            }
         }
         
         do {

@@ -67,8 +67,9 @@ struct LogDetailView: View {
                     ForEach(sortedLoggedPins) { loggedPin in
                         HStack {
                             VStack(alignment: .leading) {
-                                Text(loggedPin.pin?.name ?? "Unknown Pin")
+                                Text(loggedPin.displayName ?? loggedPin.pin?.name ?? "Unknown Pin")
                                     .font(.headline)
+                                
                                 Text("Split: \(formatTime(loggedPin.splitTime))")
                                     .font(.caption.monospaced())
                                     .foregroundColor(.secondary)

@@ -31,23 +31,27 @@ class LiveTrackingViewModel: ObservableObject {
     func startRun(for route: Route) {
         print(route.name ?? "Unnamed Route")
         let routePins = route.routePins as? Set<RoutePin> ?? []
-        let sortedPins = routePins.sorted { $0.order < $1.order }.compactMap { $0.pin }
+        // Get the sorted RoutePin objects, not just the Pins
+        let sortedRoutePins = routePins.sorted { $0.order < $1.order }
         
-        guard !sortedPins.isEmpty else { return }
-        print(route.name ?? "Unnamed Route")
+        guard !sortedRoutePins.isEmpty else { return }
+
         let newLog = Log(context: viewContext)
         newLog.id = UUID()
         newLog.startTime = Date()
         newLog.route = route
 
-        for (index, pin) in sortedPins.enumerated() {
+        // Iterate over the RoutePins to access displayName
+        for routePin in sortedRoutePins {
             let loggedPin = LoggedPin(context: viewContext)
             loggedPin.id = UUID()
-            loggedPin.pin = pin
+            loggedPin.pin = routePin.pin
             loggedPin.log = newLog
-            loggedPin.order = Int32(index)
+            loggedPin.order = routePin.order
             
-            if index == 0 {
+            loggedPin.displayName = routePin.displayName
+            
+            if routePin.order == 0 {
                 loggedPin.runningTime = 0
                 loggedPin.splitTime = 0
             }
@@ -60,14 +64,14 @@ class LiveTrackingViewModel: ObservableObject {
         startTime = Date()
         startTimer()
         splitTimer()
-        runState = .running
-        lastTime = Date()
-        
-        guard let log = activeLog else { return }
-        
-        let loggedPinsSet = log.loggedPins as? Set<LoggedPin> ?? []
-        let loggedPins = loggedPinsSet.sorted { $0.order < $1.order }
-        numPins = loggedPins.count - 1
+                runState = .running
+                lastTime = Date()
+                
+                guard let log = activeLog else { return }
+                
+                let loggedPinsSet = log.loggedPins as? Set<LoggedPin> ?? []
+                let loggedPins = loggedPinsSet.sorted { $0.order < $1.order }
+                numPins = loggedPins.count - 1
     }
 
     func splitLap() {
