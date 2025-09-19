@@ -57,11 +57,21 @@
 			);
 			target = 05339B662E6CB6E0003ED7A5 /* TGO */;
 		};
+		056404532E7E0128007F2251 /* Exceptions for "TGO" folder in "TGO" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 05339B662E6CB6E0003ED7A5 /* TGO */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		05339B692E6CB6E0003ED7A5 /* TGO */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				056404532E7E0128007F2251 /* Exceptions for "TGO" folder in "TGO" target */,
+			);
 			path = TGO;
 			sourceTree = "<group>";
 		};
@@ -385,7 +395,10 @@
 				DEVELOPMENT_TEAM = 47BSYSRS4D;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "our location is used to center the map and show your position.";
+				INFOPLIST_FILE = TGO/Info.plist;
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Your location is used to center the map and show your position.";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "Your location is used to center the map and show your position.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to center the map and show your position.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -415,7 +428,10 @@
 				DEVELOPMENT_TEAM = 47BSYSRS4D;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "our location is used to center the map and show your position.";
+				INFOPLIST_FILE = TGO/Info.plist;
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Your location is used to center the map and show your position.";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "Your location is used to center the map and show your position.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to center the map and show your position.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

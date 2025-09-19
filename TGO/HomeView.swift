@@ -27,14 +27,23 @@ struct HomeView: View {
     
     @State private var selectedRoute: Route?
     
-    init() {
-        let context = PersistenceController.shared.container.viewContext
-        _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context))
-    }
+//    init() {
+//        let context = PersistenceController.shared.container.viewContext
+//        _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context))
+//    }
     
-    private init(context: NSManagedObjectContext) {
-        _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context))
-    }
+//    private init(context: NSManagedObjectContext) {
+//        _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context))
+//    }
+    init() {
+            let context = PersistenceController.shared.container.viewContext
+            // Create the LocationManager instance first
+            let lm = LocationManager()
+            
+            // Initialize the StateObjects, passing the manager into the view model
+            _locationManager = StateObject(wrappedValue: lm)
+            _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context, locationManager: lm))
+        }
     
     var body: some View {
         VStack{
@@ -56,6 +65,15 @@ struct HomeView: View {
             }
         }
         .onChange(of: runViewModel.runState) {
+//            if runViewModel.nextSplitIndex == runViewModel.numPins {
+//                locationManager.stopTracking()
+//                saveRoute()
+//                isEnd = false
+//            }
+            if runViewModel.nextSplitIndex == runViewModel.numPins-1{
+                isEnd = true
+            }
+//            currSplitIndex+=1
             if runViewModel.runState == .inactive && locationManager.isTracking {
                  locationManager.stopTracking()
                  saveRoute()
@@ -85,7 +103,9 @@ struct HomeView: View {
                         // Safely unwrap the associated Pin
                         if let pin = routePin.pin {
                             // Use displayName, falling back to the pin's name
-                            Annotation(routePin.displayName ?? pin.name ?? "Pin", coordinate: pin.coordinate) {
+//                            Annotation(routePin.displayName ?? pin.name ?? "Pin", coordinate: pin.coordinate) {
+                            Annotation(pin.name ?? "Pin", coordinate: pin.coordinate) {
+
                                 Image(systemName: "flag.fill")
                                     .foregroundColor(.black)
                                     .padding()
@@ -354,6 +374,9 @@ struct HomeView: View {
                         saveRoute()
                         isEnd = false
                     }
+                    let polyline = Polyline.encode(coordinates: locationManager.polylineRoute)
+                    print(locationManager.polylineRoute)
+                    print(polyline)
                     if runViewModel.nextSplitIndex == runViewModel.numPins-1{
                         isEnd = true
                     }
@@ -391,7 +414,10 @@ struct HomeView: View {
     
     private func saveRoute() {
         let polyline = Polyline.encode(coordinates: locationManager.polylineRoute)
+        print(locationManager.polylineRoute)
+        print(polyline)
         runViewModel.activeLog?.polyline = polyline
+//        print(runViewModel.activeLog!.polyline)
     }
 }
 

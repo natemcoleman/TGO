@@ -26,9 +26,26 @@ class LiveTrackingViewModel: ObservableObject {
     
     private var runActivity: Activity<TgoActivityAttributes>?
     
-    init(context: NSManagedObjectContext) {
-        self.viewContext = context
-    }
+    private var locationManager: LocationManager
+
+//    init(context: NSManagedObjectContext) {
+//        self.viewContext = context
+//    }
+    init(context: NSManagedObjectContext, locationManager: LocationManager) {
+            self.viewContext = context
+            self.locationManager = locationManager
+            
+            // Set up the callbacks right here
+            setupLocationManagerCallbacks()
+        }
+    private func setupLocationManagerCallbacks() {
+            locationManager.onRegionEnter = { [weak self] region in
+                self?.handleRegionTrigger(identifier: region.identifier)
+            }
+            locationManager.onRegionExit = { [weak self] region in
+                self?.handleRegionTrigger(identifier: region.identifier)
+            }
+        }
     
     func startRun(for route: Route) {
         print(route.name ?? "Unnamed Route")
@@ -157,9 +174,14 @@ class LiveTrackingViewModel: ObservableObject {
                 print("Invalid region identifier format: \(identifier)")
                 return
             }
-
-            if order == nextSplitIndex {
-                print("Correct region triggered: \(identifier). Splitting lap.")
+        
+        let polyline = Polyline.encode(coordinates: locationManager.polylineRoute)
+//        print(locationManager.polylineRoute)
+//        print(polyline)
+        guard let log = activeLog else { return }
+        log.polyline = polyline
+        if order == nextSplitIndex {
+            print("Correct region triggered: \(identifier). Splitting lap.")
                 DispatchQueue.main.async {
                     self.splitLap()
                 }
