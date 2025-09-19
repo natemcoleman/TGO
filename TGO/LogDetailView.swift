@@ -80,16 +80,16 @@ struct LogDetailView: View {
                         }
                     }
                 }
-//                Section("Polyline") {
-//                    HStack {
-//                        Text("Polyline:")
-//                            .font(.caption.monospaced())
-//                            .foregroundColor(.secondary)
-//                        Spacer()
-//                        Text(log.polyline ?? "")
-//                            .textSelection(.enabled)
-//                    }
-//                }
+                Section("Polyline") {
+                    HStack {
+                        Text("Polyline:")
+                            .font(.caption.monospaced())
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text(log.polyline ?? "")
+                            .textSelection(.enabled)
+                    }
+                }
             }
             .navigationTitle("Run Details")
             .navigationBarTitleDisplayMode(.inline)

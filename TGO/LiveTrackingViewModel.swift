@@ -131,6 +131,43 @@ class LiveTrackingViewModel: ObservableObject {
         startTimer()
     }
     
+//    func handleRegionEntry(identifier: String) {
+//            // Parse the order number from an identifier like "pin_1"
+//            let components = identifier.split(separator: "_")
+//            guard components.count == 2, let order = Int(components[1]) else {
+//                print("Invalid region identifier format: \(identifier)")
+//                return
+//            }
+//
+//            // Check if the entered region corresponds to the *next expected* checkpoint.
+//            if order == nextSplitIndex {
+//                print("Correct region entered: \(identifier). Splitting lap.")
+//                DispatchQueue.main.async {
+//                    self.splitLap()
+//                }
+//            } else {
+//                print("Entered region \(identifier) out of order. Expected index was \(nextSplitIndex).")
+//                // This logic prevents splitting if a user passes through a future checkpoint's
+//                // region before completing the current one.
+//            }
+//        }
+    func handleRegionTrigger(identifier: String) {
+            let components = identifier.split(separator: "_")
+            guard components.count == 2, let order = Int(components[1]) else {
+                print("Invalid region identifier format: \(identifier)")
+                return
+            }
+
+            if order == nextSplitIndex {
+                print("Correct region triggered: \(identifier). Splitting lap.")
+                DispatchQueue.main.async {
+                    self.splitLap()
+                }
+            } else {
+                print("Region \(identifier) triggered out of order. Expected index was \(nextSplitIndex).")
+            }
+        }
+    
     private func formatTime(_ interval: TimeInterval) -> String {
         let minutes = Int(interval) / 60
         let seconds = Int(interval) % 60

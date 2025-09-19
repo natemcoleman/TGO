@@ -45,6 +45,24 @@ struct HomeView: View {
                 liveRunView
             }
         }
+        .onAppear {
+            setDefaultRoute()
+            // Update callbacks to handle both entry and exit events
+            locationManager.onRegionEnter = { region in
+                runViewModel.handleRegionTrigger(identifier: region.identifier)
+            }
+            locationManager.onRegionExit = { region in
+                runViewModel.handleRegionTrigger(identifier: region.identifier)
+            }
+        }
+        .onChange(of: runViewModel.runState) {
+            if runViewModel.runState == .inactive && locationManager.isTracking {
+                 locationManager.stopTracking()
+                 saveRoute()
+                 isEnd = false
+                 currSplitIndex = 0
+            }
+        }
     }
     
     private var setupView: some View {
@@ -116,11 +134,6 @@ struct HomeView: View {
                 
                 List(sortedRoutePins, id: \.self) { routePin in
                     Text("\(routePin.displayName ?? "Checkpoint")")
-//                    if routePin.onEnter {
-//                        Text("\(routePin.displayName ?? "Checkpoint")")
-//                    } else {
-//                        Text("\(routePin.displayName ?? "Checkpoint")")
-//                    }
                 }
             }
             
@@ -128,6 +141,11 @@ struct HomeView: View {
             
             Button(action: {
                 if let route = selectedRoute {
+                    let routePins = route.routePins as? Set<RoutePin> ?? []
+                    let sortedRoutePins = routePins.sorted { $0.order < $1.order }
+                    
+                    locationManager.monitorRegions(for: sortedRoutePins)
+                    
                     decodedRoute = [] // Clear old route from map
                     locationManager.startTracking()
                     runViewModel.startRun(for: route)
