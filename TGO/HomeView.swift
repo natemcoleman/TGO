@@ -414,10 +414,7 @@ struct HomeView: View {
     
     private func saveRoute() {
         let polyline = Polyline.encode(coordinates: locationManager.polylineRoute)
-        print(locationManager.polylineRoute)
-        print(polyline)
         runViewModel.activeLog?.polyline = polyline
-//        print(runViewModel.activeLog!.polyline)
     }
 }
 
