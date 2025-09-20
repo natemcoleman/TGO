@@ -27,23 +27,23 @@ struct HomeView: View {
     
     @State private var selectedRoute: Route?
     
-//    init() {
-//        let context = PersistenceController.shared.container.viewContext
-//        _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context))
-//    }
+    //    init() {
+    //        let context = PersistenceController.shared.container.viewContext
+    //        _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context))
+    //    }
     
-//    private init(context: NSManagedObjectContext) {
-//        _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context))
-//    }
+    //    private init(context: NSManagedObjectContext) {
+    //        _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context))
+    //    }
     init() {
-            let context = PersistenceController.shared.container.viewContext
-            // Create the LocationManager instance first
-            let lm = LocationManager()
-            
-            // Initialize the StateObjects, passing the manager into the view model
-            _locationManager = StateObject(wrappedValue: lm)
-            _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context, locationManager: lm))
-        }
+        let context = PersistenceController.shared.container.viewContext
+        // Create the LocationManager instance first
+        let lm = LocationManager()
+        
+        // Initialize the StateObjects, passing the manager into the view model
+        _locationManager = StateObject(wrappedValue: lm)
+        _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context, locationManager: lm))
+    }
     
     var body: some View {
         VStack{
@@ -65,20 +65,20 @@ struct HomeView: View {
             }
         }
         .onChange(of: runViewModel.runState) {
-//            if runViewModel.nextSplitIndex == runViewModel.numPins {
-//                locationManager.stopTracking()
-//                saveRoute()
-//                isEnd = false
-//            }
+            //            if runViewModel.nextSplitIndex == runViewModel.numPins {
+            //                locationManager.stopTracking()
+            //                saveRoute()
+            //                isEnd = false
+            //            }
             if runViewModel.nextSplitIndex == runViewModel.numPins-1{
                 isEnd = true
             }
-//            currSplitIndex+=1
+            //            currSplitIndex+=1
             if runViewModel.runState == .inactive && locationManager.isTracking {
-                 locationManager.stopTracking()
-                 saveRoute()
-                 isEnd = false
-                 currSplitIndex = 0
+                locationManager.stopTracking()
+                saveRoute()
+                isEnd = false
+                currSplitIndex = 0
             }
         }
     }
@@ -95,17 +95,11 @@ struct HomeView: View {
                 
                 if let route = selectedRoute {
                     let routePins = route.routePins as? Set<RoutePin> ?? []
-                    // Sort the RoutePin objects directly
                     let sortedRoutePins = routePins.sorted { $0.order < $1.order }
                     
-                    // Iterate over the sorted RoutePin objects
                     ForEach(sortedRoutePins, id: \.self) { routePin in
-                        // Safely unwrap the associated Pin
                         if let pin = routePin.pin {
-                            // Use displayName, falling back to the pin's name
-//                            Annotation(routePin.displayName ?? pin.name ?? "Pin", coordinate: pin.coordinate) {
                             Annotation(pin.name ?? "Pin", coordinate: pin.coordinate) {
-
                                 Image(systemName: "flag.fill")
                                     .foregroundColor(.black)
                                     .padding()
@@ -181,7 +175,7 @@ struct HomeView: View {
             
             Spacer()
         }
-        .onAppear(perform: setDefaultRoute) // Set the default when the view appears
+//        .onAppear(perform: setDefaultRoute) // Set the default when the view appears
         
     }
     
@@ -258,20 +252,16 @@ struct HomeView: View {
         }
     }
     private func setDefaultRoute() {
-        // This check ensures we only set the default once.
         if selectedRoute == nil {
             if let firstRoute = routes.first {
-                // If routes exist, pick the first one from the already fetched list.
                 selectedRoute = firstRoute
             } else {
-                // If no routes exist, create and save a new one as a backup.
                 let newRoute = Route(context: viewContext)
                 newRoute.name = "My First Route"
                 newRoute.createdAt = Date()
                 
                 do {
                     try viewContext.save()
-                    // Set the newly created route as the selection.
                     selectedRoute = newRoute
                 } catch {
                     print("Failed to create and save backup route: \(error)")
@@ -312,10 +302,8 @@ struct HomeView: View {
             VStack{
                 Text(formatTime(runViewModel.splitTime))
                     .font(.system(size: 48, weight: .bold, design: .rounded))
-                //                    .padding()
                 Text(formatTime(runViewModel.elapsedTime))
                     .font(.system(size: 24, design: .rounded))
-                //                    .padding()
             }
             
             ScrollViewReader { proxy in
@@ -344,39 +332,21 @@ struct HomeView: View {
                         )
                     }
                 }
-                .onChange(of: runViewModel.nextSplitIndex) { // 2. Detect when the index changes
-                    print("Trying to scroll.")
-                    withAnimation {
-                        proxy.scrollTo(runViewModel.nextSplitIndex, anchor: .center)
-                    }
-                }
-            }
-            
-            //            Spacer()
-            
-            HStack(spacing: 20) {
-                //                Button(action: {
-                //                    runViewModel.finishRun()
-                //                    locationManager.stopTracking()
-                //                    saveRoute()
-                //                })
-                //                {
-                //                    Image(systemName: "stop.circle")
-                //                        .resizable()
-                //                        .scaledToFit()
-                //                        .frame(width: 100, height: 100)
+                //                .onChange(of: runViewModel.nextSplitIndex) { // 2. Detect when the index changes
+                //                    print("Trying to scroll.")
+                //                    withAnimation {
+                //                        proxy.scrollTo(runViewModel.nextSplitIndex, anchor: .center)
+                //                    }
                 //                }
-                //                .buttonStyle(.borderedProminent).tint(.red)
-                
+            }
+                        
+            HStack(spacing: 20) {
                 Button(action: {
                     if runViewModel.nextSplitIndex == runViewModel.numPins {
                         locationManager.stopTracking()
                         saveRoute()
                         isEnd = false
                     }
-                    let polyline = Polyline.encode(coordinates: locationManager.polylineRoute)
-                    print(locationManager.polylineRoute)
-                    print(polyline)
                     if runViewModel.nextSplitIndex == runViewModel.numPins-1{
                         isEnd = true
                     }

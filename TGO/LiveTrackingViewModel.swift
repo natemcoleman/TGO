@@ -24,28 +24,29 @@ class LiveTrackingViewModel: ObservableObject {
     private var viewContext: NSManagedObjectContext
     private var lastTime: Date?
     
-    private var runActivity: Activity<TgoActivityAttributes>?
+    //    private var runActivity: Activity<TgoActivityAttributes>?
+    private var runActivity: Activity<RunActivityAttributes>?
     
     private var locationManager: LocationManager
-
-//    init(context: NSManagedObjectContext) {
-//        self.viewContext = context
-//    }
+    
+    //    init(context: NSManagedObjectContext) {
+    //        self.viewContext = context
+    //    }
     init(context: NSManagedObjectContext, locationManager: LocationManager) {
-            self.viewContext = context
-            self.locationManager = locationManager
-            
-            // Set up the callbacks right here
-            setupLocationManagerCallbacks()
-        }
+        self.viewContext = context
+        self.locationManager = locationManager
+        
+        // Set up the callbacks right here
+        setupLocationManagerCallbacks()
+    }
     private func setupLocationManagerCallbacks() {
-            locationManager.onRegionEnter = { [weak self] region in
-                self?.handleRegionTrigger(identifier: region.identifier)
-            }
-            locationManager.onRegionExit = { [weak self] region in
-                self?.handleRegionTrigger(identifier: region.identifier)
-            }
+        locationManager.onRegionEnter = { [weak self] region in
+            self?.handleRegionTrigger(identifier: region.identifier)
         }
+        locationManager.onRegionExit = { [weak self] region in
+            self?.handleRegionTrigger(identifier: region.identifier)
+        }
+    }
     
     func startRun(for route: Route) {
         print(route.name ?? "Unnamed Route")
@@ -92,7 +93,24 @@ class LiveTrackingViewModel: ObservableObject {
         let loggedPins = loggedPinsSet.sorted { $0.order < $1.order }
         numPins = loggedPins.count - 1
         
-        startLiveActivity(sortedRoutePins: sortedRoutePins)
+        //        startLiveActivity(sortedRoutePins: sortedRoutePins)
+        
+        let attributes = RunActivityAttributes(routeName: route.name ?? "Unnamed Route")
+        let initialState = RunActivityAttributes.ContentState(
+            elapsedTime: 0,
+            splitTime: 0,
+            nextCheckpoint: sortedRoutePins.first?.displayName ?? "Start"
+        )
+        
+        do {
+            runActivity = try Activity<RunActivityAttributes>.request(
+                attributes: attributes,
+                contentState: initialState,
+                pushType: nil
+            )
+        } catch (let error) {
+            print("Error starting Live Activity: \(error.localizedDescription)")
+        }
     }
     
     func splitLap() {
@@ -110,7 +128,24 @@ class LiveTrackingViewModel: ObservableObject {
         currentLoggedPin.runningTime = currentTime
         currentLoggedPin.splitTime = currentTime - previousLoggedPin.runningTime
         
-        updateLiveActivity(loggedPins: loggedPins, nextIndex: nextSplitIndex + 1)
+        //        updateLiveActivity(loggedPins: loggedPins, nextIndex: nextSplitIndex + 1)
+        
+        let nextCheckpointName: String
+        if nextSplitIndex < loggedPins.count {
+            nextCheckpointName = loggedPins[nextSplitIndex].displayName ?? "Next Pin"
+        } else {
+            nextCheckpointName = "Finish"
+        }
+        
+        let updatedState = RunActivityAttributes.ContentState(
+            elapsedTime: currentElapsedTime(),
+            splitTime: currentLoggedPin.splitTime,
+            nextCheckpoint: nextCheckpointName
+        )
+        
+        Task {
+            await runActivity?.update(using: updatedState)
+        }
         
         if nextSplitIndex == loggedPins.count - 1 {
             finishRun()
@@ -122,6 +157,14 @@ class LiveTrackingViewModel: ObservableObject {
     }
     
     func finishRun() {
+        Task {
+            let finalState = RunActivityAttributes.ContentState(
+                elapsedTime: currentElapsedTime(),
+                splitTime: splitTime,
+                nextCheckpoint: "Finished!"
+            )
+            await runActivity?.end(using: finalState, dismissalPolicy: .immediate)
+        }
         timer?.invalidate()
         if let log = activeLog {
             log.totalTime = currentElapsedTime()
@@ -131,7 +174,8 @@ class LiveTrackingViewModel: ObservableObject {
                 print("Error saving log: \(error.localizedDescription)")
             }
         }
-        endLiveActivity()
+        //        endLiveActivity()
+        
         
         reset()
     }
@@ -148,47 +192,47 @@ class LiveTrackingViewModel: ObservableObject {
         startTimer()
     }
     
-//    func handleRegionEntry(identifier: String) {
-//            // Parse the order number from an identifier like "pin_1"
-//            let components = identifier.split(separator: "_")
-//            guard components.count == 2, let order = Int(components[1]) else {
-//                print("Invalid region identifier format: \(identifier)")
-//                return
-//            }
-//
-//            // Check if the entered region corresponds to the *next expected* checkpoint.
-//            if order == nextSplitIndex {
-//                print("Correct region entered: \(identifier). Splitting lap.")
-//                DispatchQueue.main.async {
-//                    self.splitLap()
-//                }
-//            } else {
-//                print("Entered region \(identifier) out of order. Expected index was \(nextSplitIndex).")
-//                // This logic prevents splitting if a user passes through a future checkpoint's
-//                // region before completing the current one.
-//            }
-//        }
+    //    func handleRegionEntry(identifier: String) {
+    //            // Parse the order number from an identifier like "pin_1"
+    //            let components = identifier.split(separator: "_")
+    //            guard components.count == 2, let order = Int(components[1]) else {
+    //                print("Invalid region identifier format: \(identifier)")
+    //                return
+    //            }
+    //
+    //            // Check if the entered region corresponds to the *next expected* checkpoint.
+    //            if order == nextSplitIndex {
+    //                print("Correct region entered: \(identifier). Splitting lap.")
+    //                DispatchQueue.main.async {
+    //                    self.splitLap()
+    //                }
+    //            } else {
+    //                print("Entered region \(identifier) out of order. Expected index was \(nextSplitIndex).")
+    //                // This logic prevents splitting if a user passes through a future checkpoint's
+    //                // region before completing the current one.
+    //            }
+    //        }
     func handleRegionTrigger(identifier: String) {
-            let components = identifier.split(separator: "_")
-            guard components.count == 2, let order = Int(components[1]) else {
-                print("Invalid region identifier format: \(identifier)")
-                return
-            }
+        let components = identifier.split(separator: "_")
+        guard components.count == 2, let order = Int(components[1]) else {
+            print("Invalid region identifier format: \(identifier)")
+            return
+        }
         
         let polyline = Polyline.encode(coordinates: locationManager.polylineRoute)
-//        print(locationManager.polylineRoute)
-//        print(polyline)
+        //        print(locationManager.polylineRoute)
+        //        print(polyline)
         guard let log = activeLog else { return }
         log.polyline = polyline
         if order == nextSplitIndex {
             print("Correct region triggered: \(identifier). Splitting lap.")
-                DispatchQueue.main.async {
-                    self.splitLap()
-                }
-            } else {
-                print("Region \(identifier) triggered out of order. Expected index was \(nextSplitIndex).")
+            DispatchQueue.main.async {
+                self.splitLap()
             }
+        } else {
+            print("Region \(identifier) triggered out of order. Expected index was \(nextSplitIndex).")
         }
+    }
     
     private func formatTime(_ interval: TimeInterval) -> String {
         let minutes = Int(interval) / 60
@@ -197,53 +241,53 @@ class LiveTrackingViewModel: ObservableObject {
         return String(format: "%02d:%02d.%02d", minutes, seconds, milliseconds)
     }
     
-    private func startLiveActivity(sortedRoutePins: [RoutePin]) {
-        let attributes = TgoActivityAttributes(routeName: activeLog?.route?.name ?? "My Route")
-        let initialState = TgoActivityAttributes.ContentState(
-            currentCheckpoint: sortedRoutePins.first?.displayName ?? "Start",
-            nextCheckpoint: sortedRoutePins.count > 1 ? sortedRoutePins[1].displayName ?? "Next" : "Finish",
-            elapsedTime: "00:00.00"
-        )
-        
-        let activityContent = ActivityContent(state: initialState, staleDate: nil)
-        
-        do {
-            runActivity = try Activity<TgoActivityAttributes>.request(
-                attributes: attributes,
-                content: activityContent,
-                pushType: nil)
-            print("Live Activity started successfully.")
-        } catch (let error) {
-            print("Error starting Live Activity: \(error.localizedDescription)")
-        }
-    }
+//    private func startLiveActivity(sortedRoutePins: [RoutePin]) {
+//        let attributes = TgoActivityAttributes(routeName: activeLog?.route?.name ?? "My Route")
+//        let initialState = TgoActivityAttributes.ContentState(
+//            currentCheckpoint: sortedRoutePins.first?.displayName ?? "Start",
+//            nextCheckpoint: sortedRoutePins.count > 1 ? sortedRoutePins[1].displayName ?? "Next" : "Finish",
+//            elapsedTime: "00:00.00"
+//        )
+//        
+//        let activityContent = ActivityContent(state: initialState, staleDate: nil)
+//        
+//        do {
+//            runActivity = try Activity<TgoActivityAttributes>.request(
+//                attributes: attributes,
+//                content: activityContent,
+//                pushType: nil)
+//            print("Live Activity started successfully.")
+//        } catch (let error) {
+//            print("Error starting Live Activity: \(error.localizedDescription)")
+//        }
+//    }
     
-    private func updateLiveActivity(loggedPins: [LoggedPin], nextIndex: Int) {
-        let newContentState = TgoActivityAttributes.ContentState(
-            currentCheckpoint: loggedPins[nextIndex - 1].displayName ?? "Checkpoint",
-            nextCheckpoint: nextIndex < loggedPins.count ? loggedPins[nextIndex].displayName ?? "Next" : "Finish",
-            elapsedTime: formatTime(elapsedTime)
-        )
-        
-        Task {
-            let activityContent = ActivityContent(state: newContentState, staleDate: nil)
-            await runActivity?.update(activityContent)
-        }
-    }
+//    private func updateLiveActivity(loggedPins: [LoggedPin], nextIndex: Int) {
+//        let newContentState = TgoActivityAttributes.ContentState(
+//            currentCheckpoint: loggedPins[nextIndex - 1].displayName ?? "Checkpoint",
+//            nextCheckpoint: nextIndex < loggedPins.count ? loggedPins[nextIndex].displayName ?? "Next" : "Finish",
+//            elapsedTime: formatTime(elapsedTime)
+//        )
+//        
+//        Task {
+//            let activityContent = ActivityContent(state: newContentState, staleDate: nil)
+//            await runActivity?.update(activityContent)
+//        }
+//    }
     
-    private func endLiveActivity() {
-        Task {
-            let finalState = TgoActivityAttributes.ContentState(
-                currentCheckpoint: "Finished",
-                nextCheckpoint: "",
-                elapsedTime: formatTime(elapsedTime)
-            )
-            let finalContent = ActivityContent(state: finalState, staleDate: nil)
-            
-            await runActivity?.end(finalContent, dismissalPolicy: .immediate)
-            print("Live Activity ended.")
-        }
-    }
+//    private func endLiveActivity() {
+//        Task {
+//            let finalState = TgoActivityAttributes.ContentState(
+//                currentCheckpoint: "Finished",
+//                nextCheckpoint: "",
+//                elapsedTime: formatTime(elapsedTime)
+//            )
+//            let finalContent = ActivityContent(state: finalState, staleDate: nil)
+//            
+//            await runActivity?.end(finalContent, dismissalPolicy: .immediate)
+//            print("Live Activity ended.")
+//        }
+//    }
     
     private func reset() {
         timer?.invalidate()

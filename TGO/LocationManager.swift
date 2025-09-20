@@ -94,7 +94,9 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         guard let loc = locations.last else { return }
         let coordinate = loc.coordinate
         
-        polylineRoute.append(coordinate)
+        if isTracking {
+            polylineRoute.append(coordinate)
+        }
         
         DispatchQueue.main.async {
             self.userLocation = loc.coordinate

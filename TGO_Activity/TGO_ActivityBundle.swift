@@ -13,6 +13,6 @@ struct TGO_ActivityBundle: WidgetBundle {
     var body: some Widget {
         TGO_Activity()
         TGO_ActivityControl()
-        TGO_ActivityLiveActivity()
+        TGOActivityWidgetLiveActivity()
     }
 }
