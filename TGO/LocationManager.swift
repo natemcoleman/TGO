@@ -22,7 +22,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     
     @Published var region = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 39.22958751944363, longitude:  -76.8485354177105), // default center
-        span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+        span: MKCoordinateSpan(latitudeDelta: 0.2, longitudeDelta: 0.2)
     )
     
     @Published var userLocation: CLLocationCoordinate2D?
@@ -37,22 +37,30 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest
         
-        manager.allowsBackgroundLocationUpdates = true
+//        manager.allowsBackgroundLocationUpdates = true
         
         manager.requestWhenInUseAuthorization()
 //        manager.requestAlwaysAuthorization()
-        manager.startUpdatingLocation()
+//        manager.startUpdatingLocation()
     }
     
     func startTracking() {
+        manager.allowsBackgroundLocationUpdates = true
+        manager.pausesLocationUpdatesAutomatically = false
+        
         polylineRoute = []
         isTracking = true
         manager.startUpdatingLocation()
+        manager.startUpdatingHeading()
     }
     
     func stopTracking() {
+        manager.allowsBackgroundLocationUpdates = false
+        
         isTracking = false
         manager.stopUpdatingLocation()
+        manager.stopUpdatingHeading()
+
         stopMonitoringAllRegions()
     }
     

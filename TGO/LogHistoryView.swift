@@ -3,12 +3,12 @@ import CoreData
 
 struct LogHistoryView: View {
     @Environment(\.managedObjectContext) private var viewContext
-
+    
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Log.startTime, ascending: false)],
         animation: .default)
     private var logs: FetchedResults<Log>
-
+    
     var body: some View {
         NavigationView {
             if logs.isEmpty {
@@ -44,7 +44,7 @@ struct LogHistoryView: View {
             }
         }
     }
-
+    
     private func deleteLogs(offsets: IndexSet) {
         withAnimation {
             offsets.map { logs[$0] }.forEach(viewContext.delete)
@@ -62,23 +62,34 @@ struct LogCardView: View {
     let log: Log
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(log.route?.name ?? "Untitled Route")
-                .font(.headline)
-                .fontWeight(.bold)
+            //            Text(log.route?.name ?? "Untitled Route")
+            //                .font(.headline)
+            //                .fontWeight(.bold)
             HStack{
+                //                Text(log.startTime ?? Date(), style: .date)
+                //                Label("\(log.loggedPins?.count ?? 0) Checkpoints", systemImage: "mappin.and.ellipse")
+                ////                    .font(.subheadline)
+                ////                    .foregroundColor(.secondary)
+                Text(log.route?.name ?? "Untitled Route")
+                    .font(.headline)
+                    .fontWeight(.bold)
+                Spacer()
+                //                Text(log.startTime ?? Date(), style: .time)
+                Label(formatTime(log.totalTime), systemImage: "timer")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+            }
+            Divider()
+            HStack {
+                //                Label("\(log.loggedPins?.count ?? 0) Checkpoints", systemImage: "mappin.and.ellipse")
                 Text(log.startTime ?? Date(), style: .date)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 Spacer()
+                //                Label(formatTime(log.totalTime), systemImage: "timer")
                 Text(log.startTime ?? Date(), style: .time)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
-            }
-            Divider()
-            HStack {
-                Label("\(log.loggedPins?.count ?? 0) Checkpoints", systemImage: "mappin.and.ellipse")
-                Spacer()
-                Label(formatTime(log.totalTime), systemImage: "timer")
             }
             .font(.caption)
             .foregroundColor(.secondary)

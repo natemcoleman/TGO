@@ -50,14 +50,9 @@ struct PinMapView: View {
                 MapReader { proxy in
                     Map(position: $position) {
                         ForEach(pins) { pin in
-                            Annotation(
-                                pin.name ?? "Unnamed Pin",
-                                coordinate: pin.coordinate
-                            ) {
+                            Annotation(pin.name ?? "Unnamed Pin",coordinate: pin.coordinate) {
                                 pinAnnotationView(for: pin)
-                                    .gesture(
-                                        // Only allow dragging when in .none or .dragging mode
-                                        mode == .none || mode == .dragging
+                                    .gesture(mode == .none || mode == .dragging
                                             ? dragGesture(for: pin, in: proxy)
                                             : nil
                                     )
@@ -68,7 +63,6 @@ struct PinMapView: View {
                                         print("Tapping pin")
                                     }
                             }
-                            
                         }
                     }
                     .onTapGesture { screenPosition in
@@ -162,10 +156,12 @@ struct PinMapView: View {
     /// Provides a view for the pin, making it larger if it's being dragged.
     private func pinAnnotationView(for pin: Pin) -> some View {
         Image(systemName: "flag.fill")
-            .font(.title)
-            .foregroundStyle(.black)
-            .shadow(radius: 2)
-            // Add visual feedback for the dragged pin
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .foregroundStyle(.white)
+            .frame(width:20, height:20)
+            .padding(7)
+            .background(.green.gradient, in:.circle)
             .scaleEffect(draggedPin == pin && isDragging ? 1.5 : 1.0)
             .animation(.easeInOut(duration: 0.2), value: isDragging)
     }

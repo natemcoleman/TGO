@@ -8,12 +8,15 @@ struct HomeView: View {
     
     @StateObject private var runViewModel: LiveTrackingViewModel
     @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
-//    @StateObject private var locationManager = LocationManager()
+    //    @StateObject private var locationManager = LocationManager()
     @State private var savedPolyline: String?
     @State private var decodedRoute: [CLLocationCoordinate2D] = []
     @State private var isEnd: Bool = false
     @State private var polylines: [MKPolyline] = []
     @State private var currSplitIndex = 0
+    @State private var selectedPinForContextMenu: Pin?
+    @State private var isShowingCoordinateAlert = false
+    @State private var isShowingEditPinSheet = false
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Route.createdAt, ascending: true)])
     private var routes: FetchedResults<Route>
@@ -35,19 +38,19 @@ struct HomeView: View {
     //    private init(context: NSManagedObjectContext) {
     //        _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context))
     //    }
-//    init() {
-//        let context = PersistenceController.shared.container.viewContext
-//        // Create the LocationManager instance first
-//        let lm = LocationManager()
-//        
-//        // Initialize the StateObjects, passing the manager into the view model
-//        _locationManager = StateObject(wrappedValue: lm)
-//        _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context, locationManager: lm))
-//    }
+    //    init() {
+    //        let context = PersistenceController.shared.container.viewContext
+    //        // Create the LocationManager instance first
+    //        let lm = LocationManager()
+    //
+    //        // Initialize the StateObjects, passing the manager into the view model
+    //        _locationManager = StateObject(wrappedValue: lm)
+    //        _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context, locationManager: lm))
+    //    }
     init() {
-            let context = PersistenceController.shared.container.viewContext
-            _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context))
-        }
+        let context = PersistenceController.shared.container.viewContext
+        _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context))
+    }
     
     var body: some View {
         VStack{
@@ -61,12 +64,12 @@ struct HomeView: View {
         .onAppear {
             setDefaultRoute()
             // Update callbacks to handle both entry and exit events
-//            locationManager.onRegionEnter = { region in
-//                runViewModel.handleRegionTrigger(identifier: region.identifier)
-//            }
-//            locationManager.onRegionExit = { region in
-//                runViewModel.handleRegionTrigger(identifier: region.identifier)
-//            }
+            //            locationManager.onRegionEnter = { region in
+            //                runViewModel.handleRegionTrigger(identifier: region.identifier)
+            //            }
+            //            locationManager.onRegionExit = { region in
+            //                runViewModel.handleRegionTrigger(identifier: region.identifier)
+            //            }
         }
         .onChange(of: runViewModel.runState) {
             //            if runViewModel.nextSplitIndex == runViewModel.numPins {
@@ -78,12 +81,13 @@ struct HomeView: View {
                 isEnd = true
             }
             //            currSplitIndex+=1
-//            if runViewModel.runState == .inactive && locationManager.isTracking {
+            //            if runViewModel.runState == .inactive && locationManager.isTracking {
             if runViewModel.runState == .inactive {
-//                locationManager.stopTracking()
+                //                locationManager.stopTracking()
                 saveRoute()
                 isEnd = false
                 currSplitIndex = 0
+                position = .userLocation(fallback: .automatic)
             }
         }
     }
@@ -95,7 +99,7 @@ struct HomeView: View {
                 
                 ForEach(polylines, id: \.self) { polyline in
                     MapPolyline(polyline)
-                        .stroke(.blue, lineWidth: 3)
+                        .stroke(.blue, lineWidth: 5)
                 }
                 
                 if let route = selectedRoute {
@@ -104,11 +108,28 @@ struct HomeView: View {
                     
                     ForEach(sortedRoutePins, id: \.self) { routePin in
                         if let pin = routePin.pin {
-                            Annotation(pin.name ?? "Pin", coordinate: pin.coordinate) {
+                            Annotation(pin.name ?? "Pin", coordinate: pin.coordinate, anchor: .bottom) {
                                 Image(systemName: "flag.fill")
-                                    .foregroundColor(.black)
-                                    .padding()
-                                    .shadow(radius: 2)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .foregroundStyle(.white)
+                                    .frame(width:20, height:20)
+                                    .padding(7)
+                                    .background(.green.gradient, in:.circle)
+                                    .contextMenu{
+                                        Button("View Coordinates", systemImage: "map") {
+                                            selectedPinForContextMenu = pin
+                                            isShowingCoordinateAlert = true
+                                        }
+                                        Button("Copy Coordinates", systemImage: "doc.on.doc") {
+                                            let coordinates = "\(pin.latitude), \(pin.longitude)"
+                                            UIPasteboard.general.string = coordinates
+                                        }
+                                        Button("Edit Coordinates", systemImage: "pencil") {
+                                            selectedPinForContextMenu = pin
+                                            isShowingEditPinSheet = true
+                                        }
+                                    }
                             }
                         }
                     }
@@ -117,9 +138,26 @@ struct HomeView: View {
                     ForEach(allPins) { pin in
                         Annotation(pin.name ?? "Pin", coordinate: pin.coordinate) {
                             Image(systemName: "flag.fill")
-                                .foregroundColor(.black)
-                                .padding()
-                                .shadow(radius: 2)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .foregroundStyle(.white)
+                                .frame(width:20, height:20)
+                                .padding(7)
+                                .background(.green.gradient, in:.circle)
+                                .contextMenu{
+                                    Button("View Coordinates", systemImage: "map") {
+                                        selectedPinForContextMenu = pin
+                                        isShowingCoordinateAlert = true
+                                    }
+                                    Button("Copy Coordinates", systemImage: "doc.on.doc") {
+                                        let coordinates = "\(pin.latitude), \(pin.longitude)"
+                                        UIPasteboard.general.string = coordinates
+                                    }
+                                    Button("Edit Coordinates", systemImage: "pencil") {
+                                        selectedPinForContextMenu = pin
+                                        isShowingEditPinSheet = true
+                                    }
+                                }
                         }
                     }
                 }
@@ -146,6 +184,17 @@ struct HomeView: View {
                 updatePolylines()
                 updateMapPosition(for: selectedRoute)
             }
+            .alert("Coordinates", isPresented: $isShowingCoordinateAlert, presenting: selectedPinForContextMenu) { pin in
+                // This alert is for display only, so no buttons are needed.
+            } message: { pin in
+                Text("Latitude: \(pin.latitude)\nLongitude: \(pin.longitude)")
+            }
+            .sheet(isPresented: $isShowingEditPinSheet) {
+                if let pinToEdit = selectedPinForContextMenu {
+                    // We will create this new view next
+                    EditPinCoordinateView(pin: pinToEdit)
+                }
+            }
             
             if let route = selectedRoute {
                 let routePins = route.routePins as? Set<RoutePin> ?? []
@@ -163,10 +212,11 @@ struct HomeView: View {
                     let routePins = route.routePins as? Set<RoutePin> ?? []
                     let sortedRoutePins = routePins.sorted { $0.order < $1.order }
                     
-//                    locationManager.monitorRegions(for: sortedRoutePins)
-                    
+                    //                    locationManager.monitorRegions(for: sortedRoutePins)
+                    position = .userLocation(followsHeading: true, fallback: .automatic)
+
                     decodedRoute = [] // Clear old route from map
-//                    locationManager.startTracking()
+                    //                    locationManager.startTracking()
                     runViewModel.startRun(for: route)
                 }
             }) {
@@ -180,7 +230,7 @@ struct HomeView: View {
             
             Spacer()
         }
-//        .onAppear(perform: setDefaultRoute) // Set the default when the view appears
+        //        .onAppear(perform: setDefaultRoute) // Set the default when the view appears
         
     }
     
@@ -279,10 +329,10 @@ struct HomeView: View {
         VStack {
             Spacer()
             Map(position: $position) { //, interactionModes: []
-//                if !locationManager.polylineRoute.isEmpty {
-//                    MapPolyline(coordinates: locationManager.polylineRoute)
-//                        .stroke(.blue, lineWidth: 5)
-//                }
+                //                if !locationManager.polylineRoute.isEmpty {
+                //                    MapPolyline(coordinates: locationManager.polylineRoute)
+                //                        .stroke(.blue, lineWidth: 5)
+                //                }
                 if !runViewModel.polylineRoute.isEmpty {
                     MapPolyline(coordinates: runViewModel.polylineRoute)
                         .stroke(.blue, lineWidth: 5)
@@ -295,9 +345,12 @@ struct HomeView: View {
                     ForEach(sortedPins) { pin in
                         Annotation(pin.name ?? "Pin", coordinate: pin.coordinate) {
                             Image(systemName: "flag.fill")
-                                .foregroundColor(.black)
-                                .padding()
-                                .shadow(radius: 2)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .foregroundStyle(.white)
+                                .frame(width:20, height:20)
+                                .padding(7)
+                                .background(.green.gradient, in:.circle)
                         }
                     }
                 }
@@ -307,6 +360,7 @@ struct HomeView: View {
             .frame(width: 400, height: 200)
             .mapControls{MapUserLocationButton()}
             .mapStyle(.standard(pointsOfInterest: .excluding(.store)))
+            
             
             VStack{
                 Text(formatTime(runViewModel.splitTime))
@@ -348,11 +402,11 @@ struct HomeView: View {
                 //                    }
                 //                }
             }
-                        
+            
             HStack(spacing: 20) {
                 Button(action: {
                     if runViewModel.nextSplitIndex == runViewModel.numPins {
-//                        locationManager.stopTracking()
+                        //                        locationManager.stopTracking()
                         saveRoute()
                         isEnd = false
                     }
@@ -392,7 +446,7 @@ struct HomeView: View {
     }
     
     private func saveRoute() {
-//        let polyline = Polyline.encode(coordinates: locationManager.polylineRoute)
+        //        let polyline = Polyline.encode(coordinates: locationManager.polylineRoute)
         let polyline = Polyline.encode(coordinates: runViewModel.polylineRoute)
         runViewModel.activeLog?.polyline = polyline
     }
