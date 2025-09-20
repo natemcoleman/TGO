@@ -1,6 +1,7 @@
 import Foundation
 import CoreData
 import Combine
+import CoreLocation
 
 enum LiveRunState {
     case inactive
@@ -15,7 +16,8 @@ class LiveTrackingViewModel: ObservableObject {
     @Published var nextSplitIndex: Int = 1
     @Published var splitTime: TimeInterval = 0
     @Published var numPins: Int = 1
-    
+    @Published var polylineRoute: [CLLocationCoordinate2D] = []
+
     private var timer: Timer?
     private var startTime: Date?
     private var currentTime: Date?
@@ -23,18 +25,30 @@ class LiveTrackingViewModel: ObservableObject {
     private var viewContext: NSManagedObjectContext
     private var lastTime: Date?
         
-    private var locationManager: LocationManager
-    
+//    private var locationManager: LocationManager
+    private let locationManager = LocationManager()
+    private var cancellables = Set<AnyCancellable>()
     //    init(context: NSManagedObjectContext) {
     //        self.viewContext = context
     //    }
-    init(context: NSManagedObjectContext, locationManager: LocationManager) {
-        self.viewContext = context
-        self.locationManager = locationManager
-        
-        // Set up the callbacks right here
-        setupLocationManagerCallbacks()
-    }
+//    init(context: NSManagedObjectContext, locationManager: LocationManager) {
+//        self.viewContext = context
+//        self.locationManager = locationManager
+//        
+//        // Set up the callbacks right here
+//        setupLocationManagerCallbacks()
+//    }
+    init(context: NSManagedObjectContext) {
+            self.viewContext = context
+            setupLocationManagerCallbacks()
+            
+            locationManager.$polylineRoute
+                .receive(on: RunLoop.main)
+                .sink { [weak self] newRoute in
+                    self?.polylineRoute = newRoute
+                }
+                .store(in: &cancellables)
+        }
     private func setupLocationManagerCallbacks() {
         locationManager.onRegionEnter = { [weak self] region in
             self?.handleRegionTrigger(identifier: region.identifier)
@@ -50,6 +64,9 @@ class LiveTrackingViewModel: ObservableObject {
         // Get the sorted RoutePin objects, not just the Pins
         let sortedRoutePins = routePins.sorted { $0.order < $1.order }
         
+        locationManager.monitorRegions(for: sortedRoutePins)
+        locationManager.startTracking()
+
         guard !sortedRoutePins.isEmpty else { return }
         
         let newLog = Log(context: viewContext)
@@ -115,6 +132,11 @@ class LiveTrackingViewModel: ObservableObject {
     }
     
     func finishRun() {
+        locationManager.stopTracking()
+        if let log = activeLog {
+            log.polyline = Polyline.encode(coordinates: locationManager.polylineRoute)
+        }
+        
         timer?.invalidate()
         if let log = activeLog {
             log.totalTime = currentElapsedTime()

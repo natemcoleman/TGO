@@ -1,14 +1,14 @@
 import SwiftUI
 import MapKit
 import CoreData
-import CoreLocation
+//import CoreLocation
 
 struct HomeView: View {
     @Environment(\.managedObjectContext) private var viewContext
     
     @StateObject private var runViewModel: LiveTrackingViewModel
     @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
-    @StateObject private var locationManager = LocationManager()
+//    @StateObject private var locationManager = LocationManager()
     @State private var savedPolyline: String?
     @State private var decodedRoute: [CLLocationCoordinate2D] = []
     @State private var isEnd: Bool = false
@@ -35,15 +35,19 @@ struct HomeView: View {
     //    private init(context: NSManagedObjectContext) {
     //        _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context))
     //    }
+//    init() {
+//        let context = PersistenceController.shared.container.viewContext
+//        // Create the LocationManager instance first
+//        let lm = LocationManager()
+//        
+//        // Initialize the StateObjects, passing the manager into the view model
+//        _locationManager = StateObject(wrappedValue: lm)
+//        _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context, locationManager: lm))
+//    }
     init() {
-        let context = PersistenceController.shared.container.viewContext
-        // Create the LocationManager instance first
-        let lm = LocationManager()
-        
-        // Initialize the StateObjects, passing the manager into the view model
-        _locationManager = StateObject(wrappedValue: lm)
-        _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context, locationManager: lm))
-    }
+            let context = PersistenceController.shared.container.viewContext
+            _runViewModel = StateObject(wrappedValue: LiveTrackingViewModel(context: context))
+        }
     
     var body: some View {
         VStack{
@@ -57,12 +61,12 @@ struct HomeView: View {
         .onAppear {
             setDefaultRoute()
             // Update callbacks to handle both entry and exit events
-            locationManager.onRegionEnter = { region in
-                runViewModel.handleRegionTrigger(identifier: region.identifier)
-            }
-            locationManager.onRegionExit = { region in
-                runViewModel.handleRegionTrigger(identifier: region.identifier)
-            }
+//            locationManager.onRegionEnter = { region in
+//                runViewModel.handleRegionTrigger(identifier: region.identifier)
+//            }
+//            locationManager.onRegionExit = { region in
+//                runViewModel.handleRegionTrigger(identifier: region.identifier)
+//            }
         }
         .onChange(of: runViewModel.runState) {
             //            if runViewModel.nextSplitIndex == runViewModel.numPins {
@@ -74,8 +78,9 @@ struct HomeView: View {
                 isEnd = true
             }
             //            currSplitIndex+=1
-            if runViewModel.runState == .inactive && locationManager.isTracking {
-                locationManager.stopTracking()
+//            if runViewModel.runState == .inactive && locationManager.isTracking {
+            if runViewModel.runState == .inactive {
+//                locationManager.stopTracking()
                 saveRoute()
                 isEnd = false
                 currSplitIndex = 0
@@ -158,10 +163,10 @@ struct HomeView: View {
                     let routePins = route.routePins as? Set<RoutePin> ?? []
                     let sortedRoutePins = routePins.sorted { $0.order < $1.order }
                     
-                    locationManager.monitorRegions(for: sortedRoutePins)
+//                    locationManager.monitorRegions(for: sortedRoutePins)
                     
                     decodedRoute = [] // Clear old route from map
-                    locationManager.startTracking()
+//                    locationManager.startTracking()
                     runViewModel.startRun(for: route)
                 }
             }) {
@@ -274,8 +279,12 @@ struct HomeView: View {
         VStack {
             Spacer()
             Map(position: $position) { //, interactionModes: []
-                if !locationManager.polylineRoute.isEmpty {
-                    MapPolyline(coordinates: locationManager.polylineRoute)
+//                if !locationManager.polylineRoute.isEmpty {
+//                    MapPolyline(coordinates: locationManager.polylineRoute)
+//                        .stroke(.blue, lineWidth: 5)
+//                }
+                if !runViewModel.polylineRoute.isEmpty {
+                    MapPolyline(coordinates: runViewModel.polylineRoute)
                         .stroke(.blue, lineWidth: 5)
                 }
                 
@@ -343,7 +352,7 @@ struct HomeView: View {
             HStack(spacing: 20) {
                 Button(action: {
                     if runViewModel.nextSplitIndex == runViewModel.numPins {
-                        locationManager.stopTracking()
+//                        locationManager.stopTracking()
                         saveRoute()
                         isEnd = false
                     }
@@ -383,7 +392,8 @@ struct HomeView: View {
     }
     
     private func saveRoute() {
-        let polyline = Polyline.encode(coordinates: locationManager.polylineRoute)
+//        let polyline = Polyline.encode(coordinates: locationManager.polylineRoute)
+        let polyline = Polyline.encode(coordinates: runViewModel.polylineRoute)
         runViewModel.activeLog?.polyline = polyline
     }
 }
