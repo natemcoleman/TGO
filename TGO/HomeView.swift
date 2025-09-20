@@ -209,8 +209,8 @@ struct HomeView: View {
             
             Button(action: {
                 if let route = selectedRoute {
-                    let routePins = route.routePins as? Set<RoutePin> ?? []
-                    let sortedRoutePins = routePins.sorted { $0.order < $1.order }
+//                    let routePins = route.routePins as? Set<RoutePin> ?? []
+//                    let sortedRoutePins = routePins.sorted { $0.order < $1.order }
                     
                     //                    locationManager.monitorRegions(for: sortedRoutePins)
                     position = .userLocation(followsHeading: true, fallback: .automatic)

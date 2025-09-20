@@ -2,6 +2,7 @@ import Foundation
 import CoreData
 import Combine
 import CoreLocation
+import ActivityKit
 
 enum LiveRunState {
     case inactive
@@ -17,6 +18,9 @@ class LiveTrackingViewModel: ObservableObject {
     @Published var splitTime: TimeInterval = 0
     @Published var numPins: Int = 1
     @Published var polylineRoute: [CLLocationCoordinate2D] = []
+    @Published var isTrackingTime:Bool = false
+    @Published var startTimeAttribute: Date? = nil //change this to splittime later
+    @Published private var activity: Activity<TGOTrackingAttributes>? = nil
 
     private var timer: Timer?
     private var startTime: Date?
@@ -24,6 +28,7 @@ class LiveTrackingViewModel: ObservableObject {
     private var accumulatedTime: TimeInterval = 0
     private var viewContext: NSManagedObjectContext
     private var lastTime: Date?
+    private var nextPinName: String = ""
         
 //    private var locationManager: LocationManager
     private let locationManager = LocationManager()
@@ -105,6 +110,31 @@ class LiveTrackingViewModel: ObservableObject {
         let loggedPinsSet = log.loggedPins as? Set<LoggedPin> ?? []
         let loggedPins = loggedPinsSet.sorted { $0.order < $1.order }
         numPins = loggedPins.count - 1
+        
+        //Live Activity
+//        isTrackingTime = true
+//        startTimeAttribute = .now
+        nextPinName = loggedPins[nextSplitIndex].displayName ?? "Next Checkpoint"
+        let attributes = TGOTrackingAttributes(routeName: route.name ?? "Route", numTotalCheckpoints: self.numPins)
+//        let state = TGOTrackingAttributes.ContentState(elapsedTime: elapsedTime, splitTime: splitTime, nextCheckpoint: "")
+        do {
+            let state = TGOTrackingAttributes.ContentState(elapsedTime: elapsedTime, splitTime: splitTime, nextCheckpoint: nextPinName, numComplete: self.nextSplitIndex)
+            activity = try Activity.request(attributes: attributes, content: ActivityContent(state: state, staleDate: nil))
+        } catch {
+            print("Error starting live activity: \(error)")
+        }
+        
+//        activity = try? Activity<TGOTrackingAttributes>.request(attributes: attributes, content: state, pushType: nil)
+//        activity = try? Activity<TGOTrackingAttributes>.request(
+//            attributes: attributes,
+//            content: ActivityContent(state: state, staleDate: nil), // Corrected line
+//            pushType: nil
+//        )
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+//                    viewModel.elapsedTime += 1
+            self.updateLiveActivity()
+                }
+        
     }
     
     func splitLap() {
@@ -129,6 +159,7 @@ class LiveTrackingViewModel: ObservableObject {
         }
         splitTimer()
         lastTime = Date()
+        nextPinName = loggedPins[nextSplitIndex].displayName ?? "Next Checkpoint"
     }
     
     func finishRun() {
@@ -147,10 +178,47 @@ class LiveTrackingViewModel: ObservableObject {
             }
         }
         //        endLiveActivity()
-        
+//        guard let startTimeAttribute else { return }
+        let state = TGOTrackingAttributes.ContentState(elapsedTime: elapsedTime, splitTime: splitTime, nextCheckpoint: nextPinName, numComplete: self.nextSplitIndex)
+        Task{
+            await activity?.end(ActivityContent(state: state, staleDate: nil))
+        }
+        self.startTimeAttribute = nil
         
         reset()
     }
+
+        // 5.
+        func updateLiveActivity() {
+//            let statusMessage: String
+//            
+//            if progress < 0.3 {
+//                statusMessage = "Heating bed and extruder..."
+//            } else if progress < 0.6 {
+//                statusMessage = "Printing base layers..."
+//            } else if progress < 0.9 {
+//                statusMessage = "Printing details..."
+//            } else {
+//                statusMessage = "Finishing print..."
+//            }
+//            
+            let updatedState = TGOTrackingAttributes.ContentState(elapsedTime: elapsedTime, splitTime: splitTime, nextCheckpoint: nextPinName, numComplete: self.nextSplitIndex)
+            
+            Task {
+                await activity?.update(using: updatedState)
+            }
+        }
+
+
+//        // 6.
+//        func endLiveActivity(success: Bool = false) {
+//            let finalState = TGOTrackingAttributes.ContentState(elapsedTime: elapsedTime, splitTime: splitTime, nextCheckpoint: "")
+//            
+//            Task {
+//                await activity?.end(ActivityContent(state: finalState, staleDate: nil), dismissalPolicy: .default)
+//            }
+//        }
+    
     func pause() {
         timer?.invalidate()
         // Add the time elapsed since the last start/resume to the total.
@@ -163,27 +231,7 @@ class LiveTrackingViewModel: ObservableObject {
         runState = .running
         startTimer()
     }
-    
-    //    func handleRegionEntry(identifier: String) {
-    //            // Parse the order number from an identifier like "pin_1"
-    //            let components = identifier.split(separator: "_")
-    //            guard components.count == 2, let order = Int(components[1]) else {
-    //                print("Invalid region identifier format: \(identifier)")
-    //                return
-    //            }
-    //
-    //            // Check if the entered region corresponds to the *next expected* checkpoint.
-    //            if order == nextSplitIndex {
-    //                print("Correct region entered: \(identifier). Splitting lap.")
-    //                DispatchQueue.main.async {
-    //                    self.splitLap()
-    //                }
-    //            } else {
-    //                print("Entered region \(identifier) out of order. Expected index was \(nextSplitIndex).")
-    //                // This logic prevents splitting if a user passes through a future checkpoint's
-    //                // region before completing the current one.
-    //            }
-    //        }
+
     func handleRegionTrigger(identifier: String) {
         let components = identifier.split(separator: "_")
         guard components.count == 2, let order = Int(components[1]) else {
@@ -192,8 +240,6 @@ class LiveTrackingViewModel: ObservableObject {
         }
         
         let polyline = Polyline.encode(coordinates: locationManager.polylineRoute)
-        //        print(locationManager.polylineRoute)
-        //        print(polyline)
         guard let log = activeLog else { return }
         log.polyline = polyline
         if order == nextSplitIndex {
