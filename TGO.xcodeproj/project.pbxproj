@@ -6,23 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		054B834E2E7D1E5D00DEF608 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 054B83292E7D1BD500DEF608 /* WidgetKit.framework */; };
-		054B834F2E7D1E5D00DEF608 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 054B832B2E7D1BD500DEF608 /* SwiftUI.framework */; };
-		056404D22E7E22A4007F2251 /* TGOAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 056404D12E7E2290007F2251 /* TGOAttributes.swift */; };
-		056404D32E7E22A4007F2251 /* TGOAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 056404D12E7E2290007F2251 /* TGOAttributes.swift */; };
-/* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		054B835E2E7D1E6000DEF608 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 05339B5F2E6CB6E0003ED7A5 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 054B834C2E7D1E5D00DEF608;
-			remoteInfo = TGO_ActivityExtension;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXCopyFilesBuildPhase section */
 		054B83422E7D1BD800DEF608 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -40,27 +23,9 @@
 		05339B672E6CB6E0003ED7A5 /* TGO.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TGO.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		054B83292E7D1BD500DEF608 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		054B832B2E7D1BD500DEF608 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
-		054B834D2E7D1E5D00DEF608 /* TGO_ActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TGO_ActivityExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		056404D12E7E2290007F2251 /* TGOAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TGOAttributes.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		054B83602E7D1E6000DEF608 /* Exceptions for "TGO_Activity" folder in "TGO_ActivityExtension" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 054B834C2E7D1E5D00DEF608 /* TGO_ActivityExtension */;
-		};
-		054B83642E7D1EBF00DEF608 /* Exceptions for "TGO_Activity" folder in "TGO" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				RunActivityAttributes.swift,
-				TgoActivityAttributes.swift,
-				TgoLiveActivity.swift,
-			);
-			target = 05339B662E6CB6E0003ED7A5 /* TGO */;
-		};
 		056404532E7E0128007F2251 /* Exceptions for "TGO" folder in "TGO" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -69,13 +34,6 @@
 			);
 			target = 05339B662E6CB6E0003ED7A5 /* TGO */;
 		};
-		056404D92E7E238B007F2251 /* Exceptions for "TGO" folder in "TGO_ActivityExtension" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				PrintingActivityViewModel.swift,
-			);
-			target = 054B834C2E7D1E5D00DEF608 /* TGO_ActivityExtension */;
-		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -83,18 +41,8 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				056404532E7E0128007F2251 /* Exceptions for "TGO" folder in "TGO" target */,
-				056404D92E7E238B007F2251 /* Exceptions for "TGO" folder in "TGO_ActivityExtension" target */,
 			);
 			path = TGO;
-			sourceTree = "<group>";
-		};
-		054B83502E7D1E5D00DEF608 /* TGO_Activity */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				054B83642E7D1EBF00DEF608 /* Exceptions for "TGO_Activity" folder in "TGO" target */,
-				054B83602E7D1E6000DEF608 /* Exceptions for "TGO_Activity" folder in "TGO_ActivityExtension" target */,
-			);
-			path = TGO_Activity;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -107,24 +55,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		054B834A2E7D1E5D00DEF608 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				054B834F2E7D1E5D00DEF608 /* SwiftUI.framework in Frameworks */,
-				054B834E2E7D1E5D00DEF608 /* WidgetKit.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		05339B5E2E6CB6E0003ED7A5 = {
 			isa = PBXGroup;
 			children = (
-				056404D02E7E2289007F2251 /* Shared */,
 				05339B692E6CB6E0003ED7A5 /* TGO */,
-				054B83502E7D1E5D00DEF608 /* TGO_Activity */,
 				054B83282E7D1BD500DEF608 /* Frameworks */,
 				05339B682E6CB6E0003ED7A5 /* Products */,
 			);
@@ -134,7 +71,6 @@
 			isa = PBXGroup;
 			children = (
 				05339B672E6CB6E0003ED7A5 /* TGO.app */,
-				054B834D2E7D1E5D00DEF608 /* TGO_ActivityExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -146,14 +82,6 @@
 				054B832B2E7D1BD500DEF608 /* SwiftUI.framework */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		056404D02E7E2289007F2251 /* Shared */ = {
-			isa = PBXGroup;
-			children = (
-				056404D12E7E2290007F2251 /* TGOAttributes.swift */,
-			);
-			path = Shared;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -171,7 +99,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				054B835F2E7D1E6000DEF608 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				05339B692E6CB6E0003ED7A5 /* TGO */,
@@ -182,28 +109,6 @@
 			productName = TGO;
 			productReference = 05339B672E6CB6E0003ED7A5 /* TGO.app */;
 			productType = "com.apple.product-type.application";
-		};
-		054B834C2E7D1E5D00DEF608 /* TGO_ActivityExtension */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 054B83612E7D1E6000DEF608 /* Build configuration list for PBXNativeTarget "TGO_ActivityExtension" */;
-			buildPhases = (
-				054B83492E7D1E5D00DEF608 /* Sources */,
-				054B834A2E7D1E5D00DEF608 /* Frameworks */,
-				054B834B2E7D1E5D00DEF608 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				054B83502E7D1E5D00DEF608 /* TGO_Activity */,
-			);
-			name = TGO_ActivityExtension;
-			packageProductDependencies = (
-			);
-			productName = TGO_ActivityExtension;
-			productReference = 054B834D2E7D1E5D00DEF608 /* TGO_ActivityExtension.appex */;
-			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -217,9 +122,6 @@
 				TargetAttributes = {
 					05339B662E6CB6E0003ED7A5 = {
 						CreatedOnToolsVersion = 16.4;
-					};
-					054B834C2E7D1E5D00DEF608 = {
-						CreatedOnToolsVersion = 26.0;
 					};
 				};
 			};
@@ -238,20 +140,12 @@
 			projectRoot = "";
 			targets = (
 				05339B662E6CB6E0003ED7A5 /* TGO */,
-				054B834C2E7D1E5D00DEF608 /* TGO_ActivityExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		05339B652E6CB6E0003ED7A5 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		054B834B2E7D1E5D00DEF608 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -265,27 +159,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				056404D22E7E22A4007F2251 /* TGOAttributes.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		054B83492E7D1E5D00DEF608 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				056404D32E7E22A4007F2251 /* TGOAttributes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		054B835F2E7D1E6000DEF608 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 054B834C2E7D1E5D00DEF608 /* TGO_ActivityExtension */;
-			targetProxy = 054B835E2E7D1E6000DEF608 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		05339B752E6CB6E3003ED7A5 /* Debug */ = {
@@ -423,7 +300,6 @@
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Your location is used to center the map and show your position.";
 				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "Your location is used to center the map and show your position.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to center the map and show your position.";
-				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -456,7 +332,6 @@
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Your location is used to center the map and show your position.";
 				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "Your location is used to center the map and show your position.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to center the map and show your position.";
-				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -470,68 +345,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = natecoleman.TGO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		054B83622E7D1E6000DEF608 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 47BSYSRS4D;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = TGO_Activity/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TGO_Activity;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "natecoleman.TGO.TGO-Activity";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		054B83632E7D1E6000DEF608 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 47BSYSRS4D;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = TGO_Activity/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TGO_Activity;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "natecoleman.TGO.TGO-Activity";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -554,15 +367,6 @@
 			buildConfigurations = (
 				05339B782E6CB6E3003ED7A5 /* Debug */,
 				05339B792E6CB6E3003ED7A5 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		054B83612E7D1E6000DEF608 /* Build configuration list for PBXNativeTarget "TGO_ActivityExtension" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				054B83622E7D1E6000DEF608 /* Debug */,
-				054B83632E7D1E6000DEF608 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

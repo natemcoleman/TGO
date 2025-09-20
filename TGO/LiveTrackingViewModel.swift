@@ -1,7 +1,6 @@
 import Foundation
 import CoreData
 import Combine
-import ActivityKit // 1. Import ActivityKit
 
 enum LiveRunState {
     case inactive
@@ -23,10 +22,7 @@ class LiveTrackingViewModel: ObservableObject {
     private var accumulatedTime: TimeInterval = 0
     private var viewContext: NSManagedObjectContext
     private var lastTime: Date?
-    
-    //    private var runActivity: Activity<TgoActivityAttributes>?
-    private var runActivity: Activity<RunActivityAttributes>?
-    
+        
     private var locationManager: LocationManager
     
     //    init(context: NSManagedObjectContext) {
@@ -92,25 +88,6 @@ class LiveTrackingViewModel: ObservableObject {
         let loggedPinsSet = log.loggedPins as? Set<LoggedPin> ?? []
         let loggedPins = loggedPinsSet.sorted { $0.order < $1.order }
         numPins = loggedPins.count - 1
-        
-        //        startLiveActivity(sortedRoutePins: sortedRoutePins)
-        
-        let attributes = RunActivityAttributes(routeName: route.name ?? "Unnamed Route")
-        let initialState = RunActivityAttributes.ContentState(
-            elapsedTime: 0,
-            splitTime: 0,
-            nextCheckpoint: sortedRoutePins.first?.displayName ?? "Start"
-        )
-        
-        do {
-            runActivity = try Activity<RunActivityAttributes>.request(
-                attributes: attributes,
-                contentState: initialState,
-                pushType: nil
-            )
-        } catch (let error) {
-            print("Error starting Live Activity: \(error.localizedDescription)")
-        }
     }
     
     func splitLap() {
@@ -128,25 +105,6 @@ class LiveTrackingViewModel: ObservableObject {
         currentLoggedPin.runningTime = currentTime
         currentLoggedPin.splitTime = currentTime - previousLoggedPin.runningTime
         
-        //        updateLiveActivity(loggedPins: loggedPins, nextIndex: nextSplitIndex + 1)
-        
-        let nextCheckpointName: String
-        if nextSplitIndex < loggedPins.count {
-            nextCheckpointName = loggedPins[nextSplitIndex].displayName ?? "Next Pin"
-        } else {
-            nextCheckpointName = "Finish"
-        }
-        
-        let updatedState = RunActivityAttributes.ContentState(
-            elapsedTime: currentElapsedTime(),
-            splitTime: currentLoggedPin.splitTime,
-            nextCheckpoint: nextCheckpointName
-        )
-        
-        Task {
-            await runActivity?.update(using: updatedState)
-        }
-        
         if nextSplitIndex == loggedPins.count - 1 {
             finishRun()
         } else {
@@ -157,14 +115,6 @@ class LiveTrackingViewModel: ObservableObject {
     }
     
     func finishRun() {
-        Task {
-            let finalState = RunActivityAttributes.ContentState(
-                elapsedTime: currentElapsedTime(),
-                splitTime: splitTime,
-                nextCheckpoint: "Finished!"
-            )
-            await runActivity?.end(using: finalState, dismissalPolicy: .immediate)
-        }
         timer?.invalidate()
         if let log = activeLog {
             log.totalTime = currentElapsedTime()
@@ -240,54 +190,6 @@ class LiveTrackingViewModel: ObservableObject {
         let milliseconds = Int((interval.truncatingRemainder(dividingBy: 1)) * 100)
         return String(format: "%02d:%02d.%02d", minutes, seconds, milliseconds)
     }
-    
-//    private func startLiveActivity(sortedRoutePins: [RoutePin]) {
-//        let attributes = TgoActivityAttributes(routeName: activeLog?.route?.name ?? "My Route")
-//        let initialState = TgoActivityAttributes.ContentState(
-//            currentCheckpoint: sortedRoutePins.first?.displayName ?? "Start",
-//            nextCheckpoint: sortedRoutePins.count > 1 ? sortedRoutePins[1].displayName ?? "Next" : "Finish",
-//            elapsedTime: "00:00.00"
-//        )
-//        
-//        let activityContent = ActivityContent(state: initialState, staleDate: nil)
-//        
-//        do {
-//            runActivity = try Activity<TgoActivityAttributes>.request(
-//                attributes: attributes,
-//                content: activityContent,
-//                pushType: nil)
-//            print("Live Activity started successfully.")
-//        } catch (let error) {
-//            print("Error starting Live Activity: \(error.localizedDescription)")
-//        }
-//    }
-    
-//    private func updateLiveActivity(loggedPins: [LoggedPin], nextIndex: Int) {
-//        let newContentState = TgoActivityAttributes.ContentState(
-//            currentCheckpoint: loggedPins[nextIndex - 1].displayName ?? "Checkpoint",
-//            nextCheckpoint: nextIndex < loggedPins.count ? loggedPins[nextIndex].displayName ?? "Next" : "Finish",
-//            elapsedTime: formatTime(elapsedTime)
-//        )
-//        
-//        Task {
-//            let activityContent = ActivityContent(state: newContentState, staleDate: nil)
-//            await runActivity?.update(activityContent)
-//        }
-//    }
-    
-//    private func endLiveActivity() {
-//        Task {
-//            let finalState = TgoActivityAttributes.ContentState(
-//                currentCheckpoint: "Finished",
-//                nextCheckpoint: "",
-//                elapsedTime: formatTime(elapsedTime)
-//            )
-//            let finalContent = ActivityContent(state: finalState, staleDate: nil)
-//            
-//            await runActivity?.end(finalContent, dismissalPolicy: .immediate)
-//            print("Live Activity ended.")
-//        }
-//    }
     
     private func reset() {
         timer?.invalidate()
