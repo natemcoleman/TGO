@@ -39,8 +39,8 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         
         manager.allowsBackgroundLocationUpdates = true
         
-//        manager.requestWhenInUseAuthorization()
-        manager.requestAlwaysAuthorization()
+        manager.requestWhenInUseAuthorization()
+//        manager.requestAlwaysAuthorization()
         manager.startUpdatingLocation()
     }
     

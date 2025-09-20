@@ -297,8 +297,6 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TGO/Info.plist;
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Your location is used to center the map and show your position.";
-				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "Your location is used to center the map and show your position.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to center the map and show your position.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -329,8 +327,6 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TGO/Info.plist;
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Your location is used to center the map and show your position.";
-				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "Your location is used to center the map and show your position.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to center the map and show your position.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
