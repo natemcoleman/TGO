@@ -21,7 +21,7 @@ class LiveTrackingViewModel: ObservableObject {
     @Published var isTrackingTime:Bool = false
     @Published var startTimeAttribute: Date? = nil //change this to splittime later
     @Published private var activity: Activity<TGOTrackingAttributes>? = nil
-
+    
     private var timer: Timer?
     private var startTime: Date?
     private var currentTime: Date?
@@ -29,31 +29,21 @@ class LiveTrackingViewModel: ObservableObject {
     private var viewContext: NSManagedObjectContext
     private var lastTime: Date?
     private var nextPinName: String = ""
-        
-//    private var locationManager: LocationManager
+    
     private let locationManager = LocationManager()
     private var cancellables = Set<AnyCancellable>()
-    //    init(context: NSManagedObjectContext) {
-    //        self.viewContext = context
-    //    }
-//    init(context: NSManagedObjectContext, locationManager: LocationManager) {
-//        self.viewContext = context
-//        self.locationManager = locationManager
-//        
-//        // Set up the callbacks right here
-//        setupLocationManagerCallbacks()
-//    }
+
     init(context: NSManagedObjectContext) {
-            self.viewContext = context
-            setupLocationManagerCallbacks()
-            
-            locationManager.$polylineRoute
-                .receive(on: RunLoop.main)
-                .sink { [weak self] newRoute in
-                    self?.polylineRoute = newRoute
-                }
-                .store(in: &cancellables)
-        }
+        self.viewContext = context
+        setupLocationManagerCallbacks()
+        
+        locationManager.$polylineRoute
+            .receive(on: RunLoop.main)
+            .sink { [weak self] newRoute in
+                self?.polylineRoute = newRoute
+            }
+            .store(in: &cancellables)
+    }
     private func setupLocationManagerCallbacks() {
         locationManager.onRegionEnter = { [weak self] region in
             self?.handleRegionTrigger(identifier: region.identifier)
@@ -71,7 +61,7 @@ class LiveTrackingViewModel: ObservableObject {
         
         locationManager.monitorRegions(for: sortedRoutePins)
         locationManager.startTracking()
-
+        
         guard !sortedRoutePins.isEmpty else { return }
         
         let newLog = Log(context: viewContext)
@@ -112,29 +102,19 @@ class LiveTrackingViewModel: ObservableObject {
         numPins = loggedPins.count - 1
         
         //Live Activity
-//        isTrackingTime = true
-//        startTimeAttribute = .now
         nextPinName = loggedPins[nextSplitIndex].displayName ?? "Next Checkpoint"
         let attributes = TGOTrackingAttributes(routeName: route.name ?? "Route", numTotalCheckpoints: self.numPins)
-//        let state = TGOTrackingAttributes.ContentState(elapsedTime: elapsedTime, splitTime: splitTime, nextCheckpoint: "")
+        //        let state = TGOTrackingAttributes.ContentState(elapsedTime: elapsedTime, splitTime: splitTime, nextCheckpoint: "")
         do {
-            let state = TGOTrackingAttributes.ContentState(elapsedTime: elapsedTime, splitTime: splitTime, nextCheckpoint: nextPinName, numComplete: self.nextSplitIndex)
+            let state = TGOTrackingAttributes.ContentState(elapsedTime: elapsedTime, splitTime: splitTime, nextCheckpoint: nextPinName, numComplete: self.nextSplitIndex-1)
             activity = try Activity.request(attributes: attributes, content: ActivityContent(state: state, staleDate: nil))
         } catch {
             print("Error starting live activity: \(error)")
         }
         
-//        activity = try? Activity<TGOTrackingAttributes>.request(attributes: attributes, content: state, pushType: nil)
-//        activity = try? Activity<TGOTrackingAttributes>.request(
-//            attributes: attributes,
-//            content: ActivityContent(state: state, staleDate: nil), // Corrected line
-//            pushType: nil
-//        )
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-//                    viewModel.elapsedTime += 1
             self.updateLiveActivity()
-                }
-        
+        }
     }
     
     func splitLap() {
@@ -177,9 +157,7 @@ class LiveTrackingViewModel: ObservableObject {
                 print("Error saving log: \(error.localizedDescription)")
             }
         }
-        //        endLiveActivity()
-//        guard let startTimeAttribute else { return }
-        let state = TGOTrackingAttributes.ContentState(elapsedTime: elapsedTime, splitTime: splitTime, nextCheckpoint: nextPinName, numComplete: self.nextSplitIndex)
+        let state = TGOTrackingAttributes.ContentState(elapsedTime: elapsedTime, splitTime: splitTime, nextCheckpoint: nextPinName, numComplete: self.nextSplitIndex-1)
         Task{
             await activity?.end(ActivityContent(state: state, staleDate: nil))
         }
@@ -187,37 +165,18 @@ class LiveTrackingViewModel: ObservableObject {
         
         reset()
     }
-
-        // 5.
-        func updateLiveActivity() {
-//            let statusMessage: String
-//            
-//            if progress < 0.3 {
-//                statusMessage = "Heating bed and extruder..."
-//            } else if progress < 0.6 {
-//                statusMessage = "Printing base layers..."
-//            } else if progress < 0.9 {
-//                statusMessage = "Printing details..."
-//            } else {
-//                statusMessage = "Finishing print..."
-//            }
-//            
-            let updatedState = TGOTrackingAttributes.ContentState(elapsedTime: elapsedTime, splitTime: splitTime, nextCheckpoint: nextPinName, numComplete: self.nextSplitIndex)
-            
-            Task {
-                await activity?.update(using: updatedState)
-            }
+    
+    func updateLiveActivity() {
+        let updatedState = TGOTrackingAttributes.ContentState(elapsedTime: elapsedTime, splitTime: splitTime, nextCheckpoint: nextPinName, numComplete: self.nextSplitIndex-1)
+        
+        Task {
+//            await activity?.update(using: updatedState)
+            await activity?.update(
+                ActivityContent(state: updatedState, staleDate: nil)
+            )
         }
-
-
-//        // 6.
-//        func endLiveActivity(success: Bool = false) {
-//            let finalState = TGOTrackingAttributes.ContentState(elapsedTime: elapsedTime, splitTime: splitTime, nextCheckpoint: "")
-//            
-//            Task {
-//                await activity?.end(ActivityContent(state: finalState, staleDate: nil), dismissalPolicy: .default)
-//            }
-//        }
+        
+    }
     
     func pause() {
         timer?.invalidate()
@@ -231,7 +190,7 @@ class LiveTrackingViewModel: ObservableObject {
         runState = .running
         startTimer()
     }
-
+    
     func handleRegionTrigger(identifier: String) {
         let components = identifier.split(separator: "_")
         guard components.count == 2, let order = Int(components[1]) else {

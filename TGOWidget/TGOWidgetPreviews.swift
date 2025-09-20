@@ -22,27 +22,24 @@ let previewContentState = TGOTrackingAttributes.ContentState(
 // 2. Create the preview for your Live Activity
 struct TGOActivityWidget_Previews: PreviewProvider {
     static var previews: some View {
-        // --- Dynamic Island Previews ---
-
-        // Expanded Dynamic Island
+        // --- Lock Screen Previews ---
         previewAttributes
-            .previewContext(previewContentState, viewKind: .dynamicIsland(.expanded))
-            .previewDisplayName("Dynamic Island (Expanded)")
-
+            .previewContext(previewContentState, viewKind: .content)
+            .previewDisplayName("LS")
+        
         // Compact Dynamic Island
         previewAttributes
             .previewContext(previewContentState, viewKind: .dynamicIsland(.compact))
-            .previewDisplayName("Dynamic Island (Compact)")
+            .previewDisplayName("Comp")
+        
+        // Expanded Dynamic Island
+        previewAttributes
+            .previewContext(previewContentState, viewKind: .dynamicIsland(.expanded))
+            .previewDisplayName("Exp")
 
         // Minimal Dynamic Island
         previewAttributes
             .previewContext(previewContentState, viewKind: .dynamicIsland(.minimal))
-            .previewDisplayName("Dynamic Island (Minimal)")
-
-        // --- Lock Screen Previews ---
-        
-        previewAttributes
-            .previewContext(previewContentState, viewKind: .content)
-            .previewDisplayName("Lock Screen")
+            .previewDisplayName("Min")
     }
 }
